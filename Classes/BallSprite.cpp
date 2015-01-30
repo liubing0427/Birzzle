@@ -127,3 +127,14 @@ void BallSprite::clearFeather()
 {
 	this->removeAllChildren();
 }
+
+Address BallSprite::getAddress()
+{
+	return this->address;
+}
+
+void BallSprite::setAddress(int row, int column)
+{
+	this->address.row = row;
+	this->address.column = column;
+}

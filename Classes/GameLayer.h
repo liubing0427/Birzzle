@@ -98,11 +98,10 @@ class GameLayer : public Layer{
 protected:
 	void initBall(Sprite *tree);   //初始化球，并显示到界面
 	void registerTouchBall();  //注册球触摸并进行移动的处理
-	void setBallExchange(BallSprite* target);  //交换2个球
 
 	void checkThreeAndAboveSameBall();  //筛选出3个及以上颜色相同的球，放到m_rowThreeAboveSameBall、m_colThreeAboveSameBall
 
-	void removeAndMoveBall();  //移除可消除的球并上面的球向下移动填充，它与checkThreeAndAboveSameBall函数递归调用
+	void removeAndMoveBall();  
 
 	void produceNewBallFill();  //产生新球去填充
 public:
@@ -116,25 +115,10 @@ public:
 
 	CREATE_FUNC(GameLayer);
 
-	/**
-	* According to current game status, give the order to delegate.
-	*/
-	//CC_SYNTHESIZE(StatusDelegate*, delegator, Delegator);
-
-	/**
-	* @Override 
-	* To see @OptionDelegate::onTouch 
-	* User have touched the screen
-	* This game, user just need only this method to control game
-	*/
-	//void onTouch();
-
 	///**
 	//* This layer need physical engine work
 	//*/
 	void setPhyWorld(PhysicsWorld* world){this->world = world;}
- //   
- //   void update(float delta);
 
 private:
     
@@ -152,8 +136,4 @@ private:
 
 	vector<vector<BallSprite*>> m_rowThreeAboveSameBall; //保存行相同的球
 	vector<vector<BallSprite*>> m_colThreeAboveSameBall; //保存列相同的球
-
-	/*bool onContactBegin(EventCustom *event, const PhysicsContact& contact);
-
-	void gameOver();*/
 };

@@ -16,6 +16,12 @@ typedef enum{
 	ACTION_STATE_DIE
 }State;
 
+typedef struct
+{
+	int row;
+	int column;
+}Address;
+
 class BallSprite:public Sprite{
 public:
 	BallSprite();
@@ -27,6 +33,8 @@ public:
 	void blink();
 	void feather();
 	void clearFeather();
+	Address getAddress();
+	void setAddress(int row, int column);
 private:
 	//Ð§¹û
 	ActionState actionState;
@@ -42,4 +50,6 @@ private:
 	Action* blinkAction;
 
 	vector<Sprite*> feathers;
+
+	Address address;
 };
