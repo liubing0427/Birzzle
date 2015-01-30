@@ -130,7 +130,7 @@ private:
 
 	Node *groundNode;
 
-	struct BallSprite* m_arrBall[9][7]; //保存小球，为9行7列
+	BallSprite* m_arrBall[9][7]; //保存小球，为9行7列
 
 	cocos2d::EventListenerTouchOneByOne* m_listener1;
 

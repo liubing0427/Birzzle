@@ -135,21 +135,19 @@ void GameLayer::registerTouchBall()
 		auto delta = touch->getDelta();
 		auto ballTouchCurrentPosition=target->getPosition();
 		auto adress=target->getAddress();
-		auto ballBoundingBoxSize=m_arrBall[adress.row][adress.column]->getContentSize();
-		auto x = (ballTouchCurrentPosition.x-20)*120/(75*ballBoundingBoxSize.width);
-		auto y = (ballTouchCurrentPosition.y-30)*120/(75*ballBoundingBoxSize.height);
-		auto column = delta.x>0 ? (int)floor(x) : (int)ceil(x);
-		auto row = delta.y>0 ? (int)floor(y) : (int)ceil(y);
+		auto ballBoundingBoxSize=target->getContentSize();
+		auto x = (ballTouchCurrentPosition.x-20)*120/(70*ballBoundingBoxSize.width);
+		auto y = (ballTouchCurrentPosition.y-30)*120/(70*ballBoundingBoxSize.height);
+		//floor向下 ceil向上
+		auto column = (int)round(x);
+		auto row = (int)round(y);
 		auto position = Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
 		//x->column y->row
 		if(delta.x>0 && delta.y>0) //↗
 		{
 			if(column+1>=7 || row+1>=9 || m_arrBall[row+1][column+1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -157,10 +155,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(row+1>=9 || m_arrBall[row+1][column] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -168,10 +163,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(column-1<0 || row+1>=9 || m_arrBall[row+1][column-1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -179,10 +171,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(column-1<0 || m_arrBall[row][column-1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -190,10 +179,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(column-1<0 || row-1<0 || m_arrBall[row-1][column-1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -201,10 +187,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(row-1<0 || m_arrBall[row-1][column] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -212,10 +195,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(column+1>=7 || row-1<0 || m_arrBall[row-1][column+1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -223,10 +203,7 @@ void GameLayer::registerTouchBall()
 		{
 			if(column+1>=7 || m_arrBall[row][column+1] != NULL)
 			{
-				m_arrBall[adress.row][adress.column] = NULL;
 				target->setPosition(position);
-				target->setAddress(row,column);
-				m_arrBall[row][column]=target;
 				return;
 			}
 		}
@@ -244,14 +221,14 @@ void GameLayer::registerTouchBall()
 
 		auto ballTouchCurrentPosition=target->getPosition();
 		auto adress=target->getAddress();
-		auto ballBoundingBoxSize=m_arrBall[adress.row][adress.column]->getContentSize();
+		auto ballBoundingBoxSize=target->getContentSize();
 		auto column = (int)round((ballTouchCurrentPosition.x-20)*120/(75*ballBoundingBoxSize.width));
 		auto row = (int)round((ballTouchCurrentPosition.y-30)*120/(75*ballBoundingBoxSize.height));
 		target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30));
 		m_arrBall[adress.row][adress.column] = NULL;
-		for (auto i=row;i>0;i--)
+		for (auto i=row;i>=-1;i--)
 		{
-			if(m_arrBall[i][column]!=NULL)
+			if(i==-1 || m_arrBall[i][column]!=NULL)
 			{
 				float speed = (row-i+1)/4;
 				target->runAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + 20,(i+1)*ballBoundingBoxSize.height*75/120 + 30)));
