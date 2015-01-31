@@ -137,12 +137,10 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClCompile Include="..\Classes\AtlasLoader.cpp" />
     <ClCompile Include="..\Classes\BackgroundLayer.cpp" />
     <ClCompile Include="..\Classes\BallSprite.cpp" />
-    <ClCompile Include="..\Classes\BallThreeAlgori.cpp" />
     <ClCompile Include="..\Classes\GameLayer.cpp" />
     <ClCompile Include="..\Classes\GameScene.cpp" />
     <ClCompile Include="..\Classes\LoadingScene.cpp" />
     <ClCompile Include="..\Classes\OptionLayer.cpp" />
-    <ClCompile Include="..\Classes\ThreadPool.cpp" />
     <ClCompile Include="..\Classes\WelcomeLayer.cpp" />
     <ClCompile Include="..\Classes\WelcomeScene.cpp" />
     <ClCompile Include="main.cpp" />
@@ -152,12 +150,10 @@ xcopy /Y /Q "$(EngineRoot)external\websockets\prebuilt\win32\*.*" "$(OutDir)"</C
     <ClInclude Include="..\Classes\AtlasLoader.h" />
     <ClInclude Include="..\Classes\BackgroundLayer.h" />
     <ClInclude Include="..\Classes\BallSprite.h" />
-    <ClInclude Include="..\Classes\BallThreeAlgori.h" />
     <ClInclude Include="..\Classes\GameLayer.h" />
     <ClInclude Include="..\Classes\GameScene.h" />
     <ClInclude Include="..\Classes\LoadingScene.h" />
     <ClInclude Include="..\Classes\OptionLayer.h" />
-    <ClInclude Include="..\Classes\ThreadPool.h" />
     <ClInclude Include="..\Classes\WelcomeLayer.h" />
     <ClInclude Include="..\Classes\WelcomeScene.h" />
     <ClInclude Include="main.h" />

@@ -31,7 +31,8 @@ public:
 	static string createBallByRandom();
 	string getName();
 	void blink();
-	void feather();
+	void MoveToAction(ActionInterval* action);
+	void feater();
 	void clearFeather();
 	Address getAddress();
 	void setAddress(int row, int column);
@@ -52,4 +53,6 @@ private:
 	vector<Sprite*> feathers;
 
 	Address address;
+
+	void removeFeather();
 };

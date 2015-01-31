@@ -104,6 +104,8 @@ protected:
 	void removeAndMoveBall();  
 
 	void produceNewBallFill();  //产生新球去填充
+
+	double round(double number);
 public:
 	GameLayer();
 
@@ -136,4 +138,8 @@ private:
 
 	vector<vector<BallSprite*>> m_rowThreeAboveSameBall; //保存行相同的球
 	vector<vector<BallSprite*>> m_colThreeAboveSameBall; //保存列相同的球
+
+	bool onTouchBegan(Touch* touch, Event* event);
+	void onTouchMoved(Touch* touch, Event* event);
+	void onTouchEnded(Touch* touch, Event* event);
 };

@@ -27,9 +27,6 @@
     <ClCompile Include="..\Classes\BallSprite.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\BallThreeAlgori.cpp">
-      <Filter>Classes</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\GameLayer.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
@@ -40,9 +37,6 @@
       <Filter>Classes</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\OptionLayer.cpp">
-      <Filter>Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\ThreadPool.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\WelcomeLayer.cpp">
@@ -68,9 +62,6 @@
     <ClInclude Include="..\Classes\BallSprite.h">
       <Filter>Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\BallThreeAlgori.h">
-      <Filter>Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\GameLayer.h">
       <Filter>Classes</Filter>
     </ClInclude>
@@ -81,9 +72,6 @@
       <Filter>Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\OptionLayer.h">
-      <Filter>Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\ThreadPool.h">
       <Filter>Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\WelcomeLayer.h">

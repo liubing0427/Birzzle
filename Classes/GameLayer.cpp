@@ -102,18 +102,33 @@ void GameLayer::initBall(Sprite *tree)
 	}
 }
 
+double GameLayer::round(double number)
+{
+	return (number < 0.0 ? ceil(number - 0.5) : floor(number + 0.5));
+}
+
 void GameLayer::registerTouchBall()
 {
-	auto round = [](double number)
-	{
-		return number < 0.0 ? ceil(number - 0.5) : floor(number + 0.5);
-	};
-
 	m_listener1 = EventListenerTouchOneByOne::create();  //注册单点触摸
 	m_listener1->setSwallowTouches(true);
+	m_listener1->onTouchBegan = CC_CALLBACK_2(GameLayer::onTouchBegan, this);
+	m_listener1->onTouchMoved = CC_CALLBACK_2(GameLayer::onTouchMoved, this);
+	m_listener1->onTouchEnded = CC_CALLBACK_2(GameLayer::onTouchEnded, this);
+	//将小球增加到监听器
+	for (auto i=0; i<3; i++) {
+		for (auto j=0; j<7; j++) {
+			if (i==0&&j==0) {
+				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1, m_arrBall[i][j]);
+			} else {
+				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1->clone(), m_arrBall[i][j]);
+			}
+		}
+	}
+}
 
-	m_listener1->onTouchBegan = [](Touch* touch, Event* event){
-		auto target = static_cast<BallSprite*>(event->getCurrentTarget());
+bool GameLayer::onTouchBegan(Touch* touch, Event* event)
+{
+	auto target = static_cast<BallSprite*>(event->getCurrentTarget());
 		target->clearFeather();
 		//target->getPhysicsBody()->setDynamic(true);
 		Point locationInNode = target->convertToNodeSpace(touch->getLocation());
@@ -128,136 +143,138 @@ void GameLayer::registerTouchBall()
 			return true;
 		}
 		return false;
-	};
+}
 
-	m_listener1->onTouchMoved = [=](Touch* touch, Event* event){
-		auto target = static_cast<BallSprite*>(event->getCurrentTarget());
-		auto delta = touch->getDelta();
-		auto ballTouchCurrentPosition=target->getPosition();
-		auto adress=target->getAddress();
-		auto ballBoundingBoxSize=target->getContentSize();
-		auto x = (ballTouchCurrentPosition.x-20)*120/(70*ballBoundingBoxSize.width);
-		auto y = (ballTouchCurrentPosition.y-30)*120/(70*ballBoundingBoxSize.height);
-		//floor向下 ceil向上
-		auto column = (int)round(x);
-		auto row = (int)round(y);
-		auto position = Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
-		//x->column y->row
-		if(delta.x>0 && delta.y>0) //↗
+void GameLayer::onTouchMoved(Touch* touch, Event* event)
+{
+	auto target = static_cast<BallSprite*>(event->getCurrentTarget());
+	auto delta = touch->getDelta();
+	auto ballTouchCurrentPosition=target->getPosition();
+	auto adress=target->getAddress();
+	auto ballBoundingBoxSize=target->getContentSize();
+	auto x = (ballTouchCurrentPosition.x-20)*120/(70*ballBoundingBoxSize.width);
+	auto y = (ballTouchCurrentPosition.y-30)*120/(70*ballBoundingBoxSize.height);
+	//floor向下 ceil向上
+	auto column = (int)round(x);
+	auto row = (int)round(y);
+	m_arrBall[adress.row][adress.column] = NULL;
+	auto position = Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
+	//x->column y->row
+	if(delta.x>0 && delta.y>0) //↗
+	{
+		if(column+1>=7 || row+1>=9 || m_arrBall[row+1][column+1] != NULL)
 		{
-			if(column+1>=7 || row+1>=9 || m_arrBall[row+1][column+1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x==0&&delta.y>0) //↑
-		{
-			if(row+1>=9 || m_arrBall[row+1][column] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x<0&&delta.y>0) //↖
-		{
-			if(column-1<0 || row+1>=9 || m_arrBall[row+1][column-1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x<0&&delta.y==0) //←
-		{
-			if(column-1<0 || m_arrBall[row][column-1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x<0&&delta.y<0) //↙
-		{
-			if(column-1<0 || row-1<0 || m_arrBall[row-1][column-1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x==0&&delta.y<0) //↓
-		{
-			if(row-1<0 || m_arrBall[row-1][column] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x>0&&delta.y<0) //↘
-		{
-			if(column+1>=7 || row-1<0 || m_arrBall[row-1][column+1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		else if(delta.x>0&&delta.y==0) //→
-		{
-			if(column+1>=7 || m_arrBall[row][column+1] != NULL)
-			{
-				target->setPosition(position);
-				return;
-			}
-		}
-		target->setPosition(target->getPosition() + touch->getDelta());
-		//this->setBallExchange(target);
-
-	};
-
-	m_listener1->onTouchEnded = [=](Touch* touch, Event* event){
-		auto target = static_cast<BallSprite*>(event->getCurrentTarget());
-		//target->getPhysicsBody()->setDynamic(false);
-		log("sprite onTouchesEnded.. ");
-		/*target->setZOrder(0);
-		target->setOpacity(255);*/
-
-		auto ballTouchCurrentPosition=target->getPosition();
-		auto adress=target->getAddress();
-		auto ballBoundingBoxSize=target->getContentSize();
-		auto column = (int)round((ballTouchCurrentPosition.x-20)*120/(75*ballBoundingBoxSize.width));
-		auto row = (int)round((ballTouchCurrentPosition.y-30)*120/(75*ballBoundingBoxSize.height));
-		target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30));
-		m_arrBall[adress.row][adress.column] = NULL;
-		for (auto i=row;i>=-1;i--)
-		{
-			if(i==-1 || m_arrBall[i][column]!=NULL)
-			{
-				float speed = (row-i+1)/4;
-				target->runAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + 20,(i+1)*ballBoundingBoxSize.height*75/120 + 30)));
-				target->feather();
-				target->setAddress(i+1, column);
-				m_arrBall[i+1][column]=target;
-				break;
-			}
-		}
-		
-
-		/*this->checkThreeAndAboveSameBall();
-
-		Node* node=Node::create();
-		addChild(node);
-		node->runAction(Sequence::create(DelayTime::create(0.3f),CallFunc::create([this](){this->produceNewBallFill();}), NULL));*/
-	};
-
-	//将小球增加到监听器
-	for (auto i=0; i<3; i++) {
-		for (auto j=0; j<7; j++) {
-			if (i==0&&j==0) {
-				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1, m_arrBall[i][j]);
-			} else {
-				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1->clone(), m_arrBall[i][j]);
-			}
+			target->setPosition(position);
+			return;
 		}
 	}
+	else if(delta.x==0&&delta.y>0) //↑
+	{
+		if(row+1>=9 || m_arrBall[row+1][column] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x<0&&delta.y>0) //↖
+	{
+		if(column-1<0 || row+1>=9 || m_arrBall[row+1][column-1] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x<0&&delta.y==0) //←
+	{
+		if(column-1<0 || m_arrBall[row][column-1] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x<0&&delta.y<0) //↙
+	{
+		if(column-1<0 || row-1<0 || m_arrBall[row-1][column-1] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x==0&&delta.y<0) //↓
+	{
+		if(row-1<0 || m_arrBall[row-1][column] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x>0&&delta.y<0) //↘
+	{
+		if(column+1>=7 || row-1<0 || m_arrBall[row-1][column+1] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	else if(delta.x>0&&delta.y==0) //→
+	{
+		if(column+1>=7 || m_arrBall[row][column+1] != NULL)
+		{
+			target->setPosition(position);
+			return;
+		}
+	}
+	target->setPosition(target->getPosition() + touch->getDelta());
+	//this->setBallExchange(target);
+}
 
+void GameLayer::onTouchEnded(Touch* touch, Event* event)
+{
+	auto target = static_cast<BallSprite*>(event->getCurrentTarget());
+	//target->getPhysicsBody()->setDynamic(false);
+	log("sprite onTouchesEnded.. ");
+	/*target->setZOrder(0);
+	target->setOpacity(255);*/
+
+	auto ballTouchCurrentPosition=target->getPosition();
+	auto adress=target->getAddress();
+	auto ballBoundingBoxSize=target->getContentSize();
+	auto column = (int)round((ballTouchCurrentPosition.x-20)*120/(75*ballBoundingBoxSize.width));
+	auto row = (int)round((ballTouchCurrentPosition.y-30)*120/(75*ballBoundingBoxSize.height));
+	target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30));
+	if(row==adress.row&&column==adress.column)
+	{
+		m_arrBall[adress.row][adress.column] = target;
+		return;
+	}
+	for (auto i=row;i>=-1;i--)
+	{
+		if(i==-1 || m_arrBall[i][column]!=NULL)
+		{
+			float speed = (row-i+1)/4;
+			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + 20,(i+1)*ballBoundingBoxSize.height*75/120 + 30)));
+			target->setAddress(i+1, column);
+			m_arrBall[i+1][column]=target;
+
+			auto j=1;
+			while(m_arrBall[adress.row + j][adress.column]!=NULL)
+			{
+				auto p = Point(adress.column*ballBoundingBoxSize.width*75/120 + 20,(adress.row + j-1)*ballBoundingBoxSize.height*75/120 + 30);
+				m_arrBall[adress.row + j][adress.column]->runAction(MoveTo::create(1/4, p));
+				m_arrBall[adress.row + j][adress.column]->setAddress(adress.row + j-1, adress.column);
+				m_arrBall[adress.row + j-1][adress.column] = m_arrBall[adress.row + j][adress.column];
+				m_arrBall[adress.row + j][adress.column] = NULL;
+				j++;
+			}
+			break;
+		}
+	}
+		
+	/*this->checkThreeAndAboveSameBall();
+
+	Node* node=Node::create();
+	addChild(node);
+	node->runAction(Sequence::create(DelayTime::create(0.3f),CallFunc::create([this](){this->produceNewBallFill();}), NULL));*/
 }
 
 void GameLayer::checkThreeAndAboveSameBall()

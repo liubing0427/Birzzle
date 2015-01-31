@@ -13,7 +13,7 @@ BallSprite* BallSprite::createBall(string birdName){
 	SpriteFrame *spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(name);
 	if (spriteFrame && ball && ball->initWithSpriteFrame(spriteFrame))
 	{
-		ball->setScale(0.85f);
+		ball->setScale(0.83f);
 		ball->autorelease();
 
 		Animation *animation = Animation::create();
@@ -90,37 +90,49 @@ void BallSprite::blink()
 	}
 }
 
-void BallSprite::feather()
+void BallSprite::MoveToAction(ActionInterval* action)
 {
 	if(changeState(ACTION_STATE_FEATHER)){
-
-		for (auto i=0;i<4;i++)
-		{
-			auto feather = Sprite::createWithSpriteFrameName(this->featherName);
-			int j=1;
-			int iRandPos = 30 + rand() % 20; 
-			if(i%2==0)
-			{
-				j=-1;
-			}
-			feather->setPosition(Point(this->boundingBox().size.width/2 + j*iRandPos,0));
-			this->addChild(feather); 
-			iRandPos = rand() % 40; 
-			Point position = feather->getPosition();
-			MoveTo *moveTo = MoveTo::create(3, Point(position.x + j*iRandPos, - 50 - iRandPos)); 
-			FadeOut *fadeout = FadeOut::create(3);
-			RotateBy *rotaBy1 = RotateBy::create(1, 30);  
-			RotateBy *rotaBy2 = RotateBy::create(1, -30);  
-			FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, NULL);
-			Repeat *baidong = Repeat::create(seq2, -1);
-			auto action = Spawn::create(moveTo, baidong, fadeout, NULL);
-			feather->runAction(action); 
-			if(action->isDone())
-			{
-				this->removeChild(feather, true);
-			} 
-		}
+		auto all = Sequence::create(
+			action,
+			CallFunc::create(CC_CALLBACK_0(BallSprite::feater, this)), NULL);
+		this->runAction(all);
 	}
+}
+
+void BallSprite::feater()
+{
+	for (auto i=0;i<4;i++)
+	{
+		auto feather = Sprite::createWithSpriteFrameName(this->featherName);
+		int j=1;
+		int iRandPos = 30 + rand() % 20; 
+		if(i%2==0)
+		{
+			j=-1;
+		}
+		feather->setPosition(Point(this->boundingBox().size.width/2 + j*iRandPos,0));
+		this->addChild(feather); 
+		iRandPos = rand() % 40; 
+		Point position = feather->getPosition();
+		MoveTo *moveTo = MoveTo::create(3, Point(position.x + j*iRandPos, - 50 - iRandPos)); 
+		FadeOut *fadeout = FadeOut::create(3);
+		RotateBy *rotaBy1 = RotateBy::create(1, 30);  
+		RotateBy *rotaBy2 = RotateBy::create(1, -30);  
+		FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, NULL);
+		Repeat *baidong = Repeat::create(seq2, -1);
+		auto featherAction = Spawn::create(moveTo, baidong, fadeout, NULL);
+
+		auto all = Sequence::create(
+			featherAction,
+			CallFunc::create(CC_CALLBACK_0(BallSprite::removeFeather, this)), NULL);
+		feather->runAction(all); 
+	}
+}
+
+void BallSprite::removeFeather()
+{
+	this->removeAllChildren();
 }
 
 void BallSprite::clearFeather()
