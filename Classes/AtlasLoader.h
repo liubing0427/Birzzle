@@ -41,7 +41,7 @@ public:
 	* or this function will take you a long time to load texture.
 	* exp. SpriteFrame *bg_day = AtlasLoader::getInstance()->getSpriteFrameByName("bg_day");
 	*/
-	Sprite* getSpriteByName(string name);
+	Sprite* getSpriteByName(string name, bool isscale = false);
 
 protected:
 	/**

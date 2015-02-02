@@ -34,6 +34,12 @@ void AtlasLoader::loadAtlas(string filename){
 	frame->addSpriteFramesWithFile(filename);
 }
 
-Sprite* AtlasLoader::getSpriteByName(string name){
-	return Sprite::createWithSpriteFrameName(name);;
+Sprite* AtlasLoader::getSpriteByName(string name, bool isscale){
+	auto sprite = Sprite::create(name);
+	if(isscale)
+	{
+		sprite->setScaleY(1136.0f/960);
+		//sprite->setScaleX(0.5f);
+	}
+	return sprite;
 }

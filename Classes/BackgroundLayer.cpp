@@ -8,7 +8,7 @@ bool BackgroundLayer::init(){
 	}
 	Size visiableSize = Director::getInstance()->getVisibleSize();
 	//create the background image according to the current time;
-	Sprite *background = Sprite::create("stage_bg@2x.png");
+	Sprite *background = AtlasLoader::getInstance()->getSpriteByName("stage_bg@2x.png", true);
 	background->setAnchorPoint(Point::ZERO);
 	background->setPosition(Point::ZERO);
 	this->addChild(background);

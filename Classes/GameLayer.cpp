@@ -13,12 +13,10 @@ bool GameLayer::init(){
 	auto visibleOrigin = Director::getInstance()->getVisibleOrigin();
 
 	Sprite *tree = Sprite::create("stage_tree@2x.png");
-	tree->setScale(0.8f);
 	tree->setPosition(Point(visiableSize.width/2 , (visiableSize.height*7)/16));
 	this->addChild(tree);
 
 	Sprite *grass = Sprite::create("stage_tree_grass_r@2x.png");
-	grass->setScale(0.8f);
 	grass->setAnchorPoint(Point::ZERO);
 	grass->setPosition(Point(visiableSize.width/2-grass->getBoundingBox().size.width/2, 0));
 	this->addChild(grass);
@@ -158,7 +156,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto column = (int)round(x);
 	auto row = (int)round(y);
 	m_arrBall[adress.row][adress.column] = NULL;
-	auto position = Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
+	auto position = Point((column)*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
 	//x->column y->row
 	if(delta.x>0 && delta.y>0) //¨J
 	{

@@ -13,7 +13,7 @@ bool LoadingScene::init() {
 
 void LoadingScene::onEnter(){
 	// add background to current scene
-	Sprite *background = Sprite::create("splash.png");
+	Sprite *background = AtlasLoader::getInstance()->getSpriteByName("Default@2x.png", true);
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Point origin = Director::getInstance()->getVisibleOrigin();
 	background->setPosition(origin.x + visibleSize.width/2, origin.y + visibleSize.height/2);
