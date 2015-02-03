@@ -19,6 +19,7 @@ bool GameLayer::init(){
 	Sprite *grass = Sprite::create("stage_tree_grass_r@2x.png");
 	grass->setAnchorPoint(Point::ZERO);
 	grass->setPosition(Point(visiableSize.width/2-grass->getBoundingBox().size.width/2, 0));
+	grass->setGlobalZOrder(999);
 	this->addChild(grass);
 
 	/*Sprite* edgeSpace=Sprite::create();
@@ -69,7 +70,8 @@ void GameLayer::initBall(Sprite *tree)
 					}
 				}
 				BallSprite* temp_ball = BallSprite::createBall(ballname);
-				m_arrBall[i][j]=temp_ball;}
+				m_arrBall[i][j]=temp_ball;
+			}
 			else
 			{
 				m_arrBall[i][j] = NULL;
@@ -78,13 +80,14 @@ void GameLayer::initBall(Sprite *tree)
 	}
 
 	//将小球显示出来
-	for (auto i=2; i>=0; i--) {
+	for (auto i=0; i<3; i++) {
 		for (auto j=0; j<7; j++) {
 			auto ballBoundingBoxSize=m_arrBall[i][j]->getContentSize();
-			auto position=Point(j*ballBoundingBoxSize.width*75/120 + 20,i*ballBoundingBoxSize.height*75/120 + 30);
+			auto position=Point(j*ballBoundingBoxSize.width*75/120 + X_SKEWING,i*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
 			m_arrBall[i][j]->setAnchorPoint(Point::ZERO);
 			m_arrBall[i][j]->setPosition(position);
 			m_arrBall[i][j]->blink();
+			m_arrBall[i][j]->setGlobalZOrder(8-i);
 			/*PhysicsBody *body = PhysicsBody::create();
 			auto visiableSize = Director::getInstance()->getVisibleSize();
 			auto bodyPosition = Point(ballBoundingBoxSize.width*70/240+(visiableSize.width-tree->getBoundingBox().size.width)/2-15*j,ballBoundingBoxSize.height*70/240+((visiableSize.height*7)/16-tree->getBoundingBox().size.height/2)-15*i);
@@ -150,13 +153,15 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto adress=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto x = (ballTouchCurrentPosition.x-20)*120/(70*ballBoundingBoxSize.width);
-	auto y = (ballTouchCurrentPosition.y-30)*120/(70*ballBoundingBoxSize.height);
+	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*120/(70*ballBoundingBoxSize.width);
+	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*120/(70*ballBoundingBoxSize.height);
 	//floor向下 ceil向上
 	auto column = (int)round(x);
 	auto row = (int)round(y);
+	column = column<0?0:(column>6?6:column);
+	row = row<0?0:(row>8?8:row);
 	m_arrBall[adress.row][adress.column] = NULL;
-	auto position = Point((column)*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30);
+	auto position = Point((column)*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
 	//x->column y->row
 	if(delta.x>0 && delta.y>0) //↗
 	{
@@ -237,9 +242,9 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto adress=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto column = (int)round((ballTouchCurrentPosition.x-20)*120/(75*ballBoundingBoxSize.width));
-	auto row = (int)round((ballTouchCurrentPosition.y-30)*120/(75*ballBoundingBoxSize.height));
-	target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + 20,row*ballBoundingBoxSize.height*75/120 + 30));
+	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*120/(75*ballBoundingBoxSize.width));
+	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*120/(75*ballBoundingBoxSize.height));
+	target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING));
 	if(row==adress.row&&column==adress.column)
 	{
 		m_arrBall[adress.row][adress.column] = target;
@@ -250,16 +255,18 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 		if(i==-1 || m_arrBall[i][column]!=NULL)
 		{
 			float speed = (row-i+1)/4;
-			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + 20,(i+1)*ballBoundingBoxSize.height*75/120 + 30)));
+			target->setGlobalZOrder(8-(i+1));
+			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING)), row!=adress.row);
 			target->setAddress(i+1, column);
 			m_arrBall[i+1][column]=target;
 
 			auto j=1;
 			while(m_arrBall[adress.row + j][adress.column]!=NULL)
 			{
-				auto p = Point(adress.column*ballBoundingBoxSize.width*75/120 + 20,(adress.row + j-1)*ballBoundingBoxSize.height*75/120 + 30);
-				m_arrBall[adress.row + j][adress.column]->runAction(MoveTo::create(1/4, p));
+				auto p = Point(adress.column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(adress.row + j-1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
+				m_arrBall[adress.row + j][adress.column]->MoveToAction(MoveTo::create(1/4, p), true);
 				m_arrBall[adress.row + j][adress.column]->setAddress(adress.row + j-1, adress.column);
+				m_arrBall[adress.row + j][adress.column]->setGlobalZOrder(adress.row + j-1);
 				m_arrBall[adress.row + j-1][adress.column] = m_arrBall[adress.row + j][adress.column];
 				m_arrBall[adress.row + j][adress.column] = NULL;
 				j++;
@@ -275,7 +282,7 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	node->runAction(Sequence::create(DelayTime::create(0.3f),CallFunc::create([this](){this->produceNewBallFill();}), NULL));*/
 }
 
-void GameLayer::checkThreeAndAboveSameBall()
+void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 {
 	
 }

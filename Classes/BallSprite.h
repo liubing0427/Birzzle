@@ -31,11 +31,11 @@ public:
 	static string createBallByRandom();
 	string getName();
 	void blink();
-	void MoveToAction(ActionInterval* action);
-	void feater();
+	void MoveToAction(ActionInterval* action, bool isYChange);
 	void clearFeather();
 	Address getAddress();
 	void setAddress(int row, int column);
+	bool init();
 private:
 	//Ð§¹û
 	ActionState actionState;
@@ -54,5 +54,5 @@ private:
 
 	Address address;
 
-	void removeFeather();
+	void removeFeather(Node* sender);
 };

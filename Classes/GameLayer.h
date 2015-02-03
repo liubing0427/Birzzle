@@ -16,9 +16,9 @@ using namespace CocosDenshion;
 #define min(X,Y) ((X) < (Y) ? (X) : (Y)) 
 #define max(X,Y) ((X) > (Y) ? (X) : (Y)) 
 
-const int UP_PIP = 21;
+const int X_SKEWING = 20;
 
-const int DOWN_PIP = 12;
+const int Y_SKEWING = 60;
 
 const int PIP_PASS = 30;
 
@@ -99,7 +99,7 @@ protected:
 	void initBall(Sprite *tree);   //初始化球，并显示到界面
 	void registerTouchBall();  //注册球触摸并进行移动的处理
 
-	void checkThreeAndAboveSameBall();  //筛选出3个及以上颜色相同的球，放到m_rowThreeAboveSameBall、m_colThreeAboveSameBall
+	void checkThreeAndAboveSameBall(BallSprite* sprite);  //筛选出3个及以上颜色相同的球
 
 	void removeAndMoveBall();  
 
@@ -128,16 +128,11 @@ private:
 
 	/*GameStatus gameStatus;*/
 
-    int score;
-
-	Node *groundNode;
-
 	BallSprite* m_arrBall[9][7]; //保存小球，为9行7列
 
 	cocos2d::EventListenerTouchOneByOne* m_listener1;
 
-	vector<vector<BallSprite*>> m_rowThreeAboveSameBall; //保存行相同的球
-	vector<vector<BallSprite*>> m_colThreeAboveSameBall; //保存列相同的球
+	vector<vector<BallSprite*>> m_sameBall; //保存相同的球
 
 	bool onTouchBegan(Touch* touch, Event* event);
 	void onTouchMoved(Touch* touch, Event* event);
