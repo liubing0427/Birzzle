@@ -42,6 +42,7 @@ bool BallSprite::init(){
 			NULL), -1);
 
 		this->featherName = String::createWithFormat("%s%s",birdName.c_str(), "_feather.png")->getCString();
+		this->isVisited = false;
 		return true;
 	}
 	return false;
@@ -161,4 +162,14 @@ void BallSprite::setAddress(int row, int column)
 {
 	this->address.row = row;
 	this->address.column = column;
+}
+
+bool BallSprite::getVisited()
+{
+	return this->isVisited;
+}
+
+void BallSprite::setVisited(bool isVisited)
+{
+	this->isVisited = isVisited;
 }

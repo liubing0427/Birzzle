@@ -151,7 +151,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto target = static_cast<BallSprite*>(event->getCurrentTarget());
 	auto delta = touch->getDelta();
 	auto ballTouchCurrentPosition=target->getPosition();
-	auto adress=target->getAddress();
+	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
 	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*120/(70*ballBoundingBoxSize.width);
 	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*120/(70*ballBoundingBoxSize.height);
@@ -160,7 +160,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto row = (int)round(y);
 	column = column<0?0:(column>6?6:column);
 	row = row<0?0:(row>8?8:row);
-	m_arrBall[adress.row][adress.column] = NULL;
+	m_arrBall[address.row][address.column] = NULL;
 	auto position = Point((column)*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
 	//x->column y->row
 	if(delta.x>0 && delta.y>0) //↗
@@ -240,14 +240,14 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	target->setOpacity(255);*/
 
 	auto ballTouchCurrentPosition=target->getPosition();
-	auto adress=target->getAddress();
+	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
 	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*120/(75*ballBoundingBoxSize.width));
 	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*120/(75*ballBoundingBoxSize.height));
 	target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING));
-	if(row==adress.row&&column==adress.column)
+	if(row==address.row&&column==address.column)
 	{
-		m_arrBall[adress.row][adress.column] = target;
+		m_arrBall[address.row][address.column] = target;
 		return;
 	}
 	for (auto i=row;i>=-1;i--)
@@ -256,35 +256,90 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 		{
 			float speed = (row-i+1)/4;
 			target->setGlobalZOrder(8-(i+1));
-			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING)), row!=adress.row);
+			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING)), row!=address.row);
 			target->setAddress(i+1, column);
 			m_arrBall[i+1][column]=target;
 
 			auto j=1;
-			while(m_arrBall[adress.row + j][adress.column]!=NULL)
+			while(m_arrBall[address.row + j][address.column]!=NULL)
 			{
-				auto p = Point(adress.column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(adress.row + j-1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
-				m_arrBall[adress.row + j][adress.column]->MoveToAction(MoveTo::create(1/4, p), true);
-				m_arrBall[adress.row + j][adress.column]->setAddress(adress.row + j-1, adress.column);
-				m_arrBall[adress.row + j][adress.column]->setGlobalZOrder(adress.row + j-1);
-				m_arrBall[adress.row + j-1][adress.column] = m_arrBall[adress.row + j][adress.column];
-				m_arrBall[adress.row + j][adress.column] = NULL;
+				auto p = Point(address.column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(address.row + j-1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
+				m_arrBall[address.row + j][address.column]->MoveToAction(MoveTo::create(1/4, p), true);
+				m_arrBall[address.row + j][address.column]->setAddress(address.row + j-1, address.column);
+				m_arrBall[address.row + j][address.column]->setGlobalZOrder(address.row + j-1);
+				m_arrBall[address.row + j-1][address.column] = m_arrBall[address.row + j][address.column];
+				m_arrBall[address.row + j][address.column] = NULL;
 				j++;
+			}
+			checkThreeAndAboveSameBall(target);
+			for (j=j-2;j>=0;j--)
+			{
+				checkThreeAndAboveSameBall(m_arrBall[address.row + j][address.column]);
+			}
+			if(m_sameBall.size()>0)
+			{
+				this->removeAndMoveBall();
 			}
 			break;
 		}
 	}
-		
-	/*this->checkThreeAndAboveSameBall();
-
-	Node* node=Node::create();
-	addChild(node);
-	node->runAction(Sequence::create(DelayTime::create(0.3f),CallFunc::create([this](){this->produceNewBallFill();}), NULL));*/
 }
 
 void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 {
-	
+	queue<BallSprite*> Q;
+	vector<BallSprite*> sameBall;
+	sprite->setVisited(true);
+	Q.push(sprite);
+	sameBall.push_back(sprite);
+	while(!Q.empty()) 
+	{
+		int i,j;
+		auto ball=Q.front();         //取队首顶点
+		auto address = ball->getAddress();
+		auto name = ball->getName();
+		Q.pop();
+		if(address.row<8 && m_arrBall[address.row+1][address.column]&&m_arrBall[address.row+1][address.column]->getVisited()==false
+			&&m_arrBall[address.row+1][address.column]->getName() == name)//↑
+		{
+			m_arrBall[address.row+1][address.column]->setVisited(true);
+			Q.push(m_arrBall[address.row+1][address.column]);
+			sameBall.push_back(m_arrBall[address.row+1][address.column]);
+		}
+		else if(address.column<6 && m_arrBall[address.row][address.column+1]&&m_arrBall[address.row][address.column+1]->getVisited()==false
+			&&m_arrBall[address.row][address.column+1]->getName() == name)//→
+		{
+			m_arrBall[address.row][address.column+1]->setVisited(true);
+			Q.push(m_arrBall[address.row][address.column+1]);
+			sameBall.push_back(m_arrBall[address.row][address.column+1]);
+		}
+		else if(address.row>0 && m_arrBall[address.row-1][address.column]&&m_arrBall[address.row-1][address.column]->getVisited()==false
+			&&m_arrBall[address.row-1][address.column]->getName() == name)//↓
+		{
+			m_arrBall[address.row-1][address.column]->setVisited(true);
+			Q.push(m_arrBall[address.row-1][address.column]);
+			sameBall.push_back(m_arrBall[address.row-1][address.column]);
+		}
+		else if(address.column>0 && m_arrBall[address.row][address.column-1]&&m_arrBall[address.row][address.column-1]->getVisited()==false
+			&&m_arrBall[address.row][address.column-1]->getName() == name)//←
+		{
+			m_arrBall[address.row][address.column-1]->setVisited(true);
+			Q.push(m_arrBall[address.row][address.column-1]);
+			sameBall.push_back(m_arrBall[address.row][address.column-1]);
+		}
+	}
+	if(sameBall.size()<3)
+	{
+		for (auto& bird : sameBall)
+		{
+			bird->setVisited(false);
+		}
+		sameBall.clear();
+	}
+	else
+	{
+		m_sameBall.push_back(sameBall);
+	}
 }
 
 void GameLayer::removeAndMoveBall()

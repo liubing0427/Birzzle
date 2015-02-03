@@ -35,6 +35,8 @@ public:
 	void clearFeather();
 	Address getAddress();
 	void setAddress(int row, int column);
+	bool getVisited();
+	void setVisited(bool isVisited);
 	bool init();
 private:
 	//Ð§¹û
@@ -53,6 +55,8 @@ private:
 	vector<Sprite*> feathers;
 
 	Address address;
+
+	bool isVisited;
 
 	void removeFeather(Node* sender);
 };
