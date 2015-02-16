@@ -1,20 +1,24 @@
 #include "cocos2d.h"
 #include "AtlasLoader.h"
+#include "Shake.h"
 using namespace cocos2d;
 
-typedef enum{
-	ACTION_STATE_NORMAL,
-	ACTION_STATE_EXPLODE,//爆炸 4个
-	ACTION_STATE_FIRE, //下一列的小鸟或冰块被消除并且在列尾发生一次爆破 5个
-	ACTION_STATE_LIGHTNING,//闪电鸟 同行同列消除 6个
-	ACTION_STATE_WHIRLWIND,//全屏相同颜色消失 7个
-}ActionState;
+const int SHAKE_TIME = 2.0f;
 
 typedef enum{
-	ACTION_STATE_BLINK,
-	ACTION_STATE_FEATHER,
-	ACTION_STATE_DIE
-}State;
+	SKILL_STATE_NORMAL,
+	SKILL_STATE_BOMB,//发光的小鸡 会爆破周围的6只鸡不等 4个 
+	SKILL_STATE_FIRE, //燃火的小鸡 会从激活处燃烧到底，最后爆炸 5个
+	SKILL_STATE_LIGHTNING,//闪电小鸡 犹如一道霹雳消除横竖向的小鸡
+	SKILL_STATE_BLACKHOLE,//黑旋风小鸡 会吸走屏幕上所有的鸡，意思就是清屏 7个
+}SkillState;
+
+typedef enum{
+	ACTION_STATE_BLINK,//眨眼
+	ACTION_STATE_FEATHER,//掉羽毛
+	ACTION_STATE_SHAKE,//晃动
+	ACTION_STATE_SKILL,//带技能状态
+}ActionState;
 
 typedef struct
 {
@@ -26,23 +30,57 @@ class BallSprite:public Sprite{
 public:
 	BallSprite();
 	~BallSprite();
-	static BallSprite* createBall(string birdName);
-	bool changeState(State state);
-	static string createBallByRandom();
-	string getName();
-	void blink();
-	void MoveToAction(ActionInterval* action, bool isYChange);
-	void clearFeather();
-	Address getAddress();
-	void setAddress(int row, int column);
-	bool getVisited();
-	void setVisited(bool isVisited);
-	bool init();
-private:
-	//效果
-	ActionState actionState;
 
-	State state;
+	static BallSprite* createBall(string birdName);
+
+	static string createBallByRandom();
+
+	string getName();
+
+	/**
+	*执行眨眼动作
+	*/
+	void blink();
+
+	void changeTo(SkillState skillState);
+
+	void MoveToAction(ActionInterval* action, const std::function<void(Node*)> &func, bool isYChange);
+
+	void clearFeather();
+
+	Address getAddress();
+
+	void setAddress(int row, int column);
+
+	bool getVisited();
+
+	void setVisited(bool isVisited);
+
+	void remove(const std::function<void(Node*)> &func);
+
+	ActionState getActionState();
+
+	SkillState getSkillState();
+
+protected:
+
+	bool init();
+	
+	/**
+	*改变动作状态
+	*/
+	bool changeActionState(ActionState state);
+
+	/**
+	*改变技能状态
+	*/
+	bool changeSkillState(SkillState state);
+
+private:
+	//技能
+	SkillState skillState;
+	//动作
+	ActionState actionState;
 
 	//the bird name will be created by random
 	string birdName;
@@ -59,4 +97,6 @@ private:
 	bool isVisited;
 
 	void removeFeather(Node* sender);
+
+	void changeToCallBack(SkillState skillState);
 };

@@ -5,8 +5,6 @@ using namespace cocos2d;
 using namespace std;
 
 /**
-* To see the single line in the file:
-* bird0_1 48 48 0.0546875 0.9472656 0.046875 0.046875
 */
 typedef struct _atlas{
 	char name[255];

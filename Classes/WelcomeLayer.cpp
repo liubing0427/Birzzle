@@ -74,11 +74,11 @@ bool WelcomeLayer::init(){
 
 	Sprite *classic = AtlasLoader::getInstance()->getSpriteByName("main_menu_classic@2x.png");
 	classic->setRotation(-6);
-	auto menuItem  = MenuItemSprite::create(classic,NULL,CC_CALLBACK_1(WelcomeLayer::menuStartCallback, this));
+	auto menuItem  = MenuItemSprite::create(classic,nullptr,CC_CALLBACK_1(WelcomeLayer::menuStartCallback, this));
 	menuItem->setAnchorPoint(Point::ZERO);
 	menuItem->setPosition(Point((visiableSize.width*27)/64 , (visiableSize.height * 11) / 27));
 
-	auto menu = Menu::create(menuItem,NULL);
+	auto menu = Menu::create(menuItem,nullptr);
 	menu->setAnchorPoint(Point::ZERO);
 	menu->setPosition(Point(origin.x ,origin.y));
 	this->addChild(menu,1);

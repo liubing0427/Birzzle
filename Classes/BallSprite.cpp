@@ -24,7 +24,7 @@ bool BallSprite::init(){
 	SpriteFrame *spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(name);
 	if(spriteFrame&&this->initWithSpriteFrame(spriteFrame))
 	{
-		this->setScale(0.83f);
+		this->setScale(0.80f);
 		this->blinkAction = Repeat::create(Sequence::create(
 			DelayTime::create(10.0f), 
 			CallFunc::create([&](){
@@ -39,18 +39,32 @@ bool BallSprite::init(){
 				Animate* animate = Animate::create(animation);
 				this->runAction(animate);
 			}),
-			NULL), -1);
+			nullptr), -1);
 
 		this->featherName = String::createWithFormat("%s%s",birdName.c_str(), "_feather.png")->getCString();
 		this->isVisited = false;
+		this->skillState = SKILL_STATE_NORMAL;
 		return true;
 	}
 	return false;
 }
 
-bool BallSprite::changeState(State state) {
-	this->state = state;
+bool BallSprite::changeActionState(ActionState state) {
+	this->actionState = state;
 	return true;
+}
+
+ActionState BallSprite::getActionState(){
+	return this->actionState;
+}
+
+bool BallSprite::changeSkillState(SkillState state) {
+	this->skillState = state;
+	return true;
+}
+
+SkillState BallSprite::getSkillState(){
+	return this->skillState;
 }
 
 string BallSprite::getName(){
@@ -92,21 +106,20 @@ string BallSprite::createBallByRandom(){
 	return birdName;
 }
 
-void BallSprite::blink()
-{
-	if(changeState(ACTION_STATE_BLINK)) {
+void BallSprite::blink(){
+	if(changeActionState(ACTION_STATE_BLINK)) {
+		blinkAction->setTag(ACTION_STATE_BLINK);
 		this->runAction(blinkAction);
 	}
 }
 
-void BallSprite::MoveToAction(ActionInterval* action, bool isYChange)
-{
-	if(changeState(ACTION_STATE_FEATHER)){
+void BallSprite::MoveToAction(ActionInterval* action, const std::function<void(Node*)> &func, bool isYChange){
+	if(changeActionState(ACTION_STATE_FEATHER)){
 		auto all = Sequence::create(
 			action,
 			ScaleTo::create(0.1f, this->getScaleX()*1.1f, this->getScaleY()*0.8f),
 			ScaleTo::create(0.1f, this->getScaleX(), this->getScaleY()),
-			CallFunc::create([&](){
+			CallFunc::create([&,isYChange](){
 				if (isYChange)
 				{
 					for (auto i=0;i<4;i++)
@@ -127,49 +140,123 @@ void BallSprite::MoveToAction(ActionInterval* action, bool isYChange)
 						FadeOut *fadeout = FadeOut::create(5.0f);
 						RotateBy *rotaBy1 = RotateBy::create(1, 30);  
 						RotateBy *rotaBy2 = RotateBy::create(1, -30);  
-						FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, NULL);
+						FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, nullptr);
 						Repeat *baidong = Repeat::create(seq2, 6);
-						auto featherAction = Spawn::create(moveTo, baidong, fadeout, NULL);
+						auto featherAction = Spawn::create(moveTo, baidong, fadeout, nullptr);
 
 						auto all = Sequence::create(
 							featherAction,
-							CallFunc::create(CC_CALLBACK_0(BallSprite::removeFeather,this, feather)), NULL);
+							CallFunc::create(CC_CALLBACK_0(BallSprite::removeFeather,this, feather)), nullptr);
 						feather->runAction(all); 
 					}
 				}
-			}), NULL);
+			}),
+			CallFuncN::create(func), 
+			nullptr);
+		all->setTag(ACTION_STATE_FEATHER); 
 		this->runAction(all);
 	}
 }
 
-void BallSprite::removeFeather(Node* sender)
-{
+void BallSprite::removeFeather(Node* sender){
 	auto feather = (Sprite*)sender;
 	this->removeChild(feather,true);
 }
 
-void BallSprite::clearFeather()
-{
+void BallSprite::clearFeather(){
 	this->removeAllChildren();
 }
 
-Address BallSprite::getAddress()
-{
+Address BallSprite::getAddress(){
 	return this->address;
 }
 
-void BallSprite::setAddress(int row, int column)
-{
+void BallSprite::setAddress(int row, int column){
 	this->address.row = row;
 	this->address.column = column;
 }
 
-bool BallSprite::getVisited()
-{
+bool BallSprite::getVisited(){
 	return this->isVisited;
 }
 
-void BallSprite::setVisited(bool isVisited)
-{
+void BallSprite::setVisited(bool isVisited){
 	this->isVisited = isVisited;
+}
+
+void BallSprite::remove(const std::function<void(Node*)> &func){
+	if(this->actionState == ACTION_STATE_SHAKE || this->skillState != SKILL_STATE_NORMAL){
+		this->stopActionByTag(ACTION_STATE_SHAKE);
+		this->stopActionByTag(ACTION_STATE_SKILL);
+	}
+
+	if(changeActionState(ACTION_STATE_SHAKE)){
+		auto action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
+			CallFuncN::create(func), nullptr);
+		action->setTag(ACTION_STATE_SHAKE);
+		this->runAction(action);
+	}
+}
+
+void BallSprite::changeTo(SkillState skillState){
+	if(this->actionState == ACTION_STATE_SHAKE || this->skillState != SKILL_STATE_NORMAL){
+		this->stopActionByTag(ACTION_STATE_SHAKE);
+		this->stopActionByTag(ACTION_STATE_SKILL);
+	}
+	if(changeActionState(ACTION_STATE_SHAKE)){
+		this->removeAllChildren();
+		auto action = Sequence::create(
+			Shake::create(SHAKE_TIME, 3),
+			CallFuncN::create(CC_CALLBACK_0(BallSprite::changeToCallBack, this, skillState)), 
+			nullptr);
+		action->setTag(ACTION_STATE_SHAKE);
+		this->runAction(action);
+	}
+}
+
+void BallSprite::changeToCallBack(SkillState skillState){
+	if(changeActionState(ACTION_STATE_BLINK) && changeSkillState(skillState)){
+		Vector<FiniteTimeAction*> list;
+		for (auto i=0;i<12;i++){
+			list.pushBack(CallFunc::create([&,i,skillState](){
+				char str[50] = {0};
+				string name;
+				switch (skillState){
+				case SKILL_STATE_BOMB:
+					name = "itemBomb";
+					break;
+				case SKILL_STATE_FIRE:
+					name = "itemFirebird";
+					break;
+				case SKILL_STATE_LIGHTNING:
+					name = "itemLightning";
+					break;
+				case SKILL_STATE_BLACKHOLE:
+					name = "itemBlackhole";
+					break;
+				default:
+					name = "itemBomb";
+					break;
+				}
+				if(i<10){
+					sprintf(str, "%s_00%d.png", name.c_str(), i);
+				}
+				else{
+					sprintf(str, "%s_0%d.png", name.c_str(), i);
+				}
+				auto skill = Sprite::createWithSpriteFrameName(str);
+				skill->setScale(1.1f);
+				skill->setPosition(this->boundingBox().size.width/2+10, this->boundingBox().size.height/2+10);
+				skill->setGlobalZOrder(21);
+				this->addChild(skill);
+			}));
+			list.pushBack(DelayTime::create(0.2f));
+			list.pushBack(CallFunc::create([&](){
+				this->removeAllChildren();
+			}));
+		}
+		auto action = RepeatForever::create(Sequence::create(list));
+		action->setTag(ACTION_STATE_SKILL);
+		this->runAction(action);
+	}
 }

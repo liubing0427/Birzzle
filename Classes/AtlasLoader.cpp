@@ -4,11 +4,11 @@
 AtlasLoader* AtlasLoader::sharedAtlasLoader = nullptr;
 
 AtlasLoader* AtlasLoader::getInstance(){
-	if(sharedAtlasLoader == NULL) {
+	if(sharedAtlasLoader == nullptr) {
 		sharedAtlasLoader = new AtlasLoader();
 		if(!sharedAtlasLoader->init()){
 			delete sharedAtlasLoader;
-			sharedAtlasLoader = NULL;
+			sharedAtlasLoader = nullptr;
 			CCLOG("ERROR: Could not init sharedAtlasLoader");
 		}
 	}

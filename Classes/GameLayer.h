@@ -16,53 +16,13 @@ using namespace CocosDenshion;
 #define min(X,Y) ((X) < (Y) ? (X) : (Y)) 
 #define max(X,Y) ((X) > (Y) ? (X) : (Y)) 
 
-const int X_SKEWING = 20;
+const int X_SKEWING = 30;
 
-const int Y_SKEWING = 60;
+const int Y_SKEWING = 80;
 
-const int PIP_PASS = 30;
+const int BIRD_WIDTH = 73;
 
-const int PIP_NEW = 31;
-
-/**
- * The radius of the bird
- */
-const int BIRD_SIZE = 75;
-
-/**
- * The height of the pips
- */
-const int PIP_HEIGHT = 320;
-
-/**
- * The width of the pips
- */
-const int PIP_WIDTH = 52;
-
-/**
- * Pip shift speed
- */
-const float PIP_SHIFT_SPEED = 80.0f;
-
-/**
- * The distance between the down pip and up pip
- */
-const int PIP_DISTANCE = 100;
-
-/**
- * The distance between the pips vertical
- */
-const int PIP_INTERVAL = 180;
-
-/**
- * The number of pip pairs display in the screen in the same time
- */
-const int PIP_COUNT = 2;
-
-/**
- * The distance that the pip will display in the screen, for player to ready
- */
-const int WAIT_DISTANCE = 100;
+const int BIRD_INIT_ROW = 6; //小鸟初始行数
 
 /**
 * Define the game status
@@ -106,6 +66,8 @@ protected:
 	void produceNewBallFill();  //产生新球去填充
 
 	double round(double number);
+
+	void checkAbove(Address address, Size ballBoundingBoxSize);//消除小球后，使上层小球下落
 public:
 	GameLayer();
 

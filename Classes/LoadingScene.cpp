@@ -23,6 +23,7 @@ void LoadingScene::onEnter(){
 
 void LoadingScene::loading(){
 	AtlasLoader::getInstance()->loadAtlas("Character_big_100.plist");
+	AtlasLoader::getInstance()->loadAtlas("Item_100.plist");
 
 	// After loading the texture , preload all the sound
 	/*SimpleAudioEngine::getInstance()->preloadEffect("sfx_die.ogg");

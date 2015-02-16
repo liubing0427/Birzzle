@@ -51,7 +51,7 @@ void GameLayer::initBall(Sprite *tree)
 	//初始化小球布局算法
 	for (auto i=0; i<9; i++) {
 		for (auto j=0; j<7; j++) {
-			if(i<3)
+			if(i<BIRD_INIT_ROW)
 			{
 				string ballname = BallSprite::createBallByRandom();
 				if (j>=2 && i<2){
@@ -74,16 +74,16 @@ void GameLayer::initBall(Sprite *tree)
 			}
 			else
 			{
-				m_arrBall[i][j] = NULL;
+				m_arrBall[i][j] = nullptr;
 			}
 		}
 	}
 
 	//将小球显示出来
-	for (auto i=0; i<3; i++) {
+	for (auto i=0; i<BIRD_INIT_ROW; i++) {
 		for (auto j=0; j<7; j++) {
 			auto ballBoundingBoxSize=m_arrBall[i][j]->getContentSize();
-			auto position=Point(j*ballBoundingBoxSize.width*75/120 + X_SKEWING,i*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
+			auto position=Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,i*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
 			m_arrBall[i][j]->setAnchorPoint(Point::ZERO);
 			m_arrBall[i][j]->setPosition(position);
 			m_arrBall[i][j]->blink();
@@ -116,7 +116,7 @@ void GameLayer::registerTouchBall()
 	m_listener1->onTouchMoved = CC_CALLBACK_2(GameLayer::onTouchMoved, this);
 	m_listener1->onTouchEnded = CC_CALLBACK_2(GameLayer::onTouchEnded, this);
 	//将小球增加到监听器
-	for (auto i=0; i<3; i++) {
+	for (auto i=0; i<BIRD_INIT_ROW; i++) {
 		for (auto j=0; j<7; j++) {
 			if (i==0&&j==0) {
 				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1, m_arrBall[i][j]);
@@ -153,19 +153,19 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*120/(70*ballBoundingBoxSize.width);
-	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*120/(70*ballBoundingBoxSize.height);
+	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.width);
+	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.height);
 	//floor向下 ceil向上
 	auto column = (int)round(x);
 	auto row = (int)round(y);
 	column = column<0?0:(column>6?6:column);
 	row = row<0?0:(row>8?8:row);
-	m_arrBall[address.row][address.column] = NULL;
-	auto position = Point((column)*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
+	m_arrBall[address.row][address.column] = nullptr;
+	auto position = Point((column)*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
 	//x->column y->row
 	if(delta.x>0 && delta.y>0) //↗
 	{
-		if(column+1>=7 || row+1>=9 || m_arrBall[row+1][column+1] != NULL)
+		if(column+1>=7 || row+1>=9 || m_arrBall[row+1][column+1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -173,7 +173,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x==0&&delta.y>0) //↑
 	{
-		if(row+1>=9 || m_arrBall[row+1][column] != NULL)
+		if(row+1>=9 || m_arrBall[row+1][column] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -181,7 +181,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x<0&&delta.y>0) //↖
 	{
-		if(column-1<0 || row+1>=9 || m_arrBall[row+1][column-1] != NULL)
+		if(column-1<0 || row+1>=9 || m_arrBall[row+1][column-1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -189,7 +189,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x<0&&delta.y==0) //←
 	{
-		if(column-1<0 || m_arrBall[row][column-1] != NULL)
+		if(column-1<0 || m_arrBall[row][column-1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -197,7 +197,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x<0&&delta.y<0) //↙
 	{
-		if(column-1<0 || row-1<0 || m_arrBall[row-1][column-1] != NULL)
+		if(column-1<0 || row-1<0 || m_arrBall[row-1][column-1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -205,7 +205,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x==0&&delta.y<0) //↓
 	{
-		if(row-1<0 || m_arrBall[row-1][column] != NULL)
+		if(row-1<0 || m_arrBall[row-1][column] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -213,7 +213,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x>0&&delta.y<0) //↘
 	{
-		if(column+1>=7 || row-1<0 || m_arrBall[row-1][column+1] != NULL)
+		if(column+1>=7 || row-1<0 || m_arrBall[row-1][column+1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -221,7 +221,7 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	}
 	else if(delta.x>0&&delta.y==0) //→
 	{
-		if(column+1>=7 || m_arrBall[row][column+1] != NULL)
+		if(column+1>=7 || m_arrBall[row][column+1] != nullptr)
 		{
 			target->setPosition(position);
 			return;
@@ -242,9 +242,9 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*120/(75*ballBoundingBoxSize.width));
-	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*120/(75*ballBoundingBoxSize.height));
-	target->setPosition(Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,row*ballBoundingBoxSize.height*75/120 + Y_SKEWING));
+	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.width));
+	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.height));
+	target->setPosition(Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING));
 	if(row==address.row&&column==address.column)
 	{
 		m_arrBall[address.row][address.column] = target;
@@ -252,37 +252,53 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	}
 	for (auto i=row;i>=-1;i--)
 	{
-		if(i==-1 || m_arrBall[i][column]!=NULL)
+		if(i==-1 || m_arrBall[i][column]!=nullptr)
 		{
-			float speed = (row-i+1)/4;
+			float speed = (row-(i+1))/4;
 			target->setGlobalZOrder(8-(i+1));
-			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING)), row!=address.row);
 			target->setAddress(i+1, column);
 			m_arrBall[i+1][column]=target;
+			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING)), 
+			[&](Node* ball)
+			{
+				auto bird = (BallSprite*)ball;
+				checkThreeAndAboveSameBall(bird);
+			}
+			,row!=(i+1));
 
 			auto j=1;
-			while(m_arrBall[address.row + j][address.column]!=NULL)
+			while(address.row + j<9&&m_arrBall[address.row + j][address.column]!=nullptr&&m_arrBall[address.row + j][address.column]->getActionState()!=ACTION_STATE_SHAKE)
 			{
-				auto p = Point(address.column*ballBoundingBoxSize.width*75/120 + X_SKEWING,(address.row + j-1)*ballBoundingBoxSize.height*75/120 + Y_SKEWING);
-				m_arrBall[address.row + j][address.column]->MoveToAction(MoveTo::create(1/4, p), true);
+				auto p = Point(address.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(address.row + j-1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+
+				m_arrBall[address.row + j][address.column]->MoveToAction(MoveTo::create(1/4.0f, p), 
+					[&](Node* ball){
+						auto bird = (BallSprite*)ball;
+						checkThreeAndAboveSameBall(bird);
+				}
+				, true);
+
 				m_arrBall[address.row + j][address.column]->setAddress(address.row + j-1, address.column);
-				m_arrBall[address.row + j][address.column]->setGlobalZOrder(address.row + j-1);
+				if(m_arrBall[address.row + j][address.column]->getSkillState()!=SKILL_STATE_NORMAL)
+				{
+					m_arrBall[address.row + j][address.column]->setGlobalZOrder(19);
+				}
+				else
+				{
+					m_arrBall[address.row + j][address.column]->setGlobalZOrder(address.row + j-1);
+				}
 				m_arrBall[address.row + j-1][address.column] = m_arrBall[address.row + j][address.column];
-				m_arrBall[address.row + j][address.column] = NULL;
+				m_arrBall[address.row + j][address.column] = nullptr;
 				j++;
 			}
-			checkThreeAndAboveSameBall(target);
-			for (j=j-2;j>=0;j--)
-			{
-				checkThreeAndAboveSameBall(m_arrBall[address.row + j][address.column]);
-			}
-			if(m_sameBall.size()>0)
-			{
-				this->removeAndMoveBall();
-			}
+
 			break;
 		}
 	}
+}
+
+void GameLayer::checkAbove(Address address, Size ballBoundingBoxSize){
+
 }
 
 void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
@@ -306,21 +322,21 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 			Q.push(m_arrBall[address.row+1][address.column]);
 			sameBall.push_back(m_arrBall[address.row+1][address.column]);
 		}
-		else if(address.column<6 && m_arrBall[address.row][address.column+1]&&m_arrBall[address.row][address.column+1]->getVisited()==false
+		if(address.column<6 && m_arrBall[address.row][address.column+1]&&m_arrBall[address.row][address.column+1]->getVisited()==false
 			&&m_arrBall[address.row][address.column+1]->getName() == name)//→
 		{
 			m_arrBall[address.row][address.column+1]->setVisited(true);
 			Q.push(m_arrBall[address.row][address.column+1]);
 			sameBall.push_back(m_arrBall[address.row][address.column+1]);
 		}
-		else if(address.row>0 && m_arrBall[address.row-1][address.column]&&m_arrBall[address.row-1][address.column]->getVisited()==false
+		if(address.row>0 && m_arrBall[address.row-1][address.column]&&m_arrBall[address.row-1][address.column]->getVisited()==false
 			&&m_arrBall[address.row-1][address.column]->getName() == name)//↓
 		{
 			m_arrBall[address.row-1][address.column]->setVisited(true);
 			Q.push(m_arrBall[address.row-1][address.column]);
 			sameBall.push_back(m_arrBall[address.row-1][address.column]);
 		}
-		else if(address.column>0 && m_arrBall[address.row][address.column-1]&&m_arrBall[address.row][address.column-1]->getVisited()==false
+		if(address.column>0 && m_arrBall[address.row][address.column-1]&&m_arrBall[address.row][address.column-1]->getVisited()==false
 			&&m_arrBall[address.row][address.column-1]->getName() == name)//←
 		{
 			m_arrBall[address.row][address.column-1]->setVisited(true);
@@ -328,23 +344,100 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 			sameBall.push_back(m_arrBall[address.row][address.column-1]);
 		}
 	}
+	for (auto& bird : sameBall)
+	{
+		bird->setVisited(false);
+	}
 	if(sameBall.size()<3)
 	{
-		for (auto& bird : sameBall)
-		{
-			bird->setVisited(false);
-		}
 		sameBall.clear();
 	}
 	else
 	{
-		m_sameBall.push_back(sameBall);
+		auto removeBirdFunc = [&](Node* ball){
+			auto bd = (BallSprite*)ball;
+			switch (bd->getSkillState())
+			{
+			case SKILL_STATE_NORMAL:
+			case SKILL_STATE_BOMB:
+			case SKILL_STATE_FIRE:
+			case SKILL_STATE_LIGHTNING:
+			case SKILL_STATE_BLACKHOLE:
+			default:
+				break;
+			}
+			bd->setVisible(false);
+			auto arr=bd->getAddress();
+			auto ballBoundingBoxSize=bd->getContentSize();
+			m_arrBall[arr.row][arr.column]=nullptr;
+			auto j=1;
+			while(arr.row + j<9&&m_arrBall[arr.row + j][arr.column]!=nullptr&&m_arrBall[arr.row + j][arr.column]->getActionState()!=ACTION_STATE_SHAKE)
+			{
+				auto k=1;
+				while (arr.row -k >= 0 && m_arrBall[arr.row -k][arr.column]==nullptr)
+				{
+					k++;
+				}
+				auto p = Point(arr.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(arr.row + j-k)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+
+				m_arrBall[arr.row + j][arr.column]->setPosition(p);
+				//m_arrBall[arr.row + j][arr.column]->MoveToAction(MoveTo::create(1/4.0f, p), 
+				//	[&](Node* ball){
+				//		/*auto bird = (BallSprite*)ball;
+				//		checkThreeAndAboveSameBall(bird);*/
+				//}
+				//, true);
+
+				m_arrBall[arr.row + j][arr.column]->setAddress(arr.row + j-k, arr.column);
+				if(m_arrBall[arr.row + j][arr.column]->getSkillState()!=SKILL_STATE_NORMAL)
+				{
+					m_arrBall[arr.row + j][arr.column]->setGlobalZOrder(19);
+				}
+				else
+				{
+					m_arrBall[arr.row + j][arr.column]->setGlobalZOrder(arr.row + j-k);
+				}
+				m_arrBall[arr.row + j-k][arr.column] = m_arrBall[arr.row + j][arr.column];
+				m_arrBall[arr.row + j][arr.column] = nullptr;
+				j++;
+			}
+		};
+		auto count = sameBall.size();
+		auto k=0;
+		for(auto& bird : sameBall){
+			k++;
+			if(k==1 && count > 3){
+
+				switch (count){
+				case 4:
+					if(bird->getSkillState() == SKILL_STATE_NORMAL){
+						bird->changeTo(SKILL_STATE_BOMB);
+					}
+					break;
+				case 5:
+					if(bird->getSkillState() == SKILL_STATE_NORMAL){
+						bird->changeTo(SKILL_STATE_FIRE);
+					}
+					break;
+				case 6:
+					if(bird->getSkillState() == SKILL_STATE_NORMAL){
+						bird->changeTo(SKILL_STATE_LIGHTNING);
+					}
+					break;
+				case 7:
+				default:
+					if(bird->getSkillState() == SKILL_STATE_NORMAL){
+						bird->changeTo(SKILL_STATE_BLACKHOLE);
+					}
+					break;
+				}
+			}
+			else{
+				bird->remove(removeBirdFunc);
+			}
+		}
+
 	}
-}
-
-void GameLayer::removeAndMoveBall()
-{
-
 }
 
 void GameLayer::produceNewBallFill()
