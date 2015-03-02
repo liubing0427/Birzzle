@@ -7,17 +7,25 @@ const int SHAKE_TIME = 2.0f;
 
 typedef enum{
 	SKILL_STATE_NORMAL,
-	SKILL_STATE_BOMB,//发光的小鸡 会爆破周围的6只鸡不等 4个 
-	SKILL_STATE_FIRE, //燃火的小鸡 会从激活处燃烧到底，最后爆炸 5个
-	SKILL_STATE_LIGHTNING,//闪电小鸡 犹如一道霹雳消除横竖向的小鸡
-	SKILL_STATE_BLACKHOLE,//黑旋风小鸡 会吸走屏幕上所有的鸡，意思就是清屏 7个
+	//发光的小鸡 会爆破周围的6只鸡不等 4个 
+	SKILL_STATE_BOMB,
+	//燃火的小鸡 会从激活处燃烧到底，最后爆炸 5个
+	SKILL_STATE_FIRE,
+	//闪电小鸡 犹如一道霹雳消除横竖向的小鸡
+	SKILL_STATE_LIGHTNING,
+	//黑旋风小鸡 会吸走屏幕上所有的鸡，意思就是清屏 7个
+	SKILL_STATE_BLACKHOLE,
 }SkillState;
 
 typedef enum{
-	ACTION_STATE_BLINK,//眨眼
-	ACTION_STATE_FEATHER,//掉羽毛
-	ACTION_STATE_SHAKE,//晃动
-	ACTION_STATE_SKILL,//带技能状态
+	//眨眼
+	ACTION_STATE_BLINK,
+	//掉羽毛
+	ACTION_STATE_FEATHER,
+	//晃动
+	ACTION_STATE_SHAKE,
+	//带技能状态
+	ACTION_STATE_SKILL,
 }ActionState;
 
 typedef struct
@@ -42,6 +50,8 @@ public:
 	*/
 	void blink();
 
+	void feather();
+
 	void changeTo(SkillState skillState);
 
 	void MoveToAction(ActionInterval* action, const std::function<void(Node*)> &func, bool isYChange);
@@ -56,11 +66,13 @@ public:
 
 	void setVisited(bool isVisited);
 
-	void remove(const std::function<void(Node*)> &func);
+	void remove(const std::function<void(Node*)> &func, const std::function<void(Node*)> &checkFunc);
 
 	ActionState getActionState();
 
 	SkillState getSkillState();
+
+	bool isLast;
 
 protected:
 

@@ -122,33 +122,7 @@ void BallSprite::MoveToAction(ActionInterval* action, const std::function<void(N
 			CallFunc::create([&,isYChange](){
 				if (isYChange)
 				{
-					for (auto i=0;i<4;i++)
-					{
-						auto feather = Sprite::createWithSpriteFrameName(this->featherName);
-						int j=1;
-						int iRandPos = 30 + rand() % 20; 
-						if(i%2==0)
-						{
-							j=-1;
-						}
-						feather->setPosition(Point(this->boundingBox().size.width/2 + j*iRandPos,0));
-						feather->setGlobalZOrder(20);
-						this->addChild(feather); 
-						iRandPos = rand() % 40; 
-						Point position = feather->getPosition();
-						MoveTo *moveTo = MoveTo::create(3.0f, Point(position.x + j*iRandPos, - 50 - iRandPos)); 
-						FadeOut *fadeout = FadeOut::create(5.0f);
-						RotateBy *rotaBy1 = RotateBy::create(1, 30);  
-						RotateBy *rotaBy2 = RotateBy::create(1, -30);  
-						FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, nullptr);
-						Repeat *baidong = Repeat::create(seq2, 6);
-						auto featherAction = Spawn::create(moveTo, baidong, fadeout, nullptr);
-
-						auto all = Sequence::create(
-							featherAction,
-							CallFunc::create(CC_CALLBACK_0(BallSprite::removeFeather,this, feather)), nullptr);
-						feather->runAction(all); 
-					}
+					this->feather();
 				}
 			}),
 			CallFuncN::create(func), 
@@ -158,13 +132,44 @@ void BallSprite::MoveToAction(ActionInterval* action, const std::function<void(N
 	}
 }
 
+void BallSprite::feather(){
+	for (auto i=0;i<4;i++)
+	{
+		auto feather = Sprite::createWithSpriteFrameName(this->featherName);
+		int j=1;
+		int iRandPos = 30 + rand() % 20; 
+		if(i%2==0)
+		{
+			j=-1;
+		}
+		feather->setPosition(Point(this->getPosition().x+this->boundingBox().size.width/2 + j*iRandPos,this->getPosition().y));
+		feather->setGlobalZOrder(20);
+		this->getParent()->addChild(feather); 
+		feather->setTag(ACTION_STATE_FEATHER);
+		iRandPos = rand() % 40; 
+		Point position = feather->getPosition();
+		MoveTo *moveTo = MoveTo::create(3.0f, Point(position.x + j*iRandPos, position.y- 50 - iRandPos)); 
+		FadeOut *fadeout = FadeOut::create(5.0f);
+		RotateBy *rotaBy1 = RotateBy::create(1, 30);  
+		RotateBy *rotaBy2 = RotateBy::create(1, -30);  
+		FiniteTimeAction *seq2 = Sequence::create(rotaBy1, rotaBy2, nullptr);
+		Repeat *baidong = Repeat::create(seq2, 6);
+		auto featherAction = Spawn::create(moveTo, baidong, fadeout, nullptr);
+
+		auto all = Sequence::create(
+			featherAction,
+			CallFunc::create(CC_CALLBACK_0(BallSprite::removeFeather,this, feather)), nullptr);
+		feather->runAction(all); 
+	}
+}
+
 void BallSprite::removeFeather(Node* sender){
 	auto feather = (Sprite*)sender;
-	this->removeChild(feather,true);
+	this->getParent()->removeChild(feather,true);
 }
 
 void BallSprite::clearFeather(){
-	this->removeAllChildren();
+	this->getParent()->removeChildByTag(ACTION_STATE_FEATHER);
 }
 
 Address BallSprite::getAddress(){
@@ -184,15 +189,27 @@ void BallSprite::setVisited(bool isVisited){
 	this->isVisited = isVisited;
 }
 
-void BallSprite::remove(const std::function<void(Node*)> &func){
+void BallSprite::remove(const std::function<void(Node*)> &func, const std::function<void(Node*)> &checkFunc){
 	if(this->actionState == ACTION_STATE_SHAKE || this->skillState != SKILL_STATE_NORMAL){
 		this->stopActionByTag(ACTION_STATE_SHAKE);
 		this->stopActionByTag(ACTION_STATE_SKILL);
 	}
 
 	if(changeActionState(ACTION_STATE_SHAKE)){
-		auto action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
-			CallFuncN::create(func), nullptr);
+		Sequence* action;
+		if(this->isLast)
+		{
+			action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
+				CallFuncN::create(func),
+				DelayTime::create(0.2f),
+				CallFuncN::create(checkFunc),
+				nullptr);
+		}
+		else
+		{
+			action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
+				CallFuncN::create(func), nullptr);
+		}
 		action->setTag(ACTION_STATE_SHAKE);
 		this->runAction(action);
 	}

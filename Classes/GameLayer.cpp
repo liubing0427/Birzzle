@@ -285,7 +285,7 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 				}
 				else
 				{
-					m_arrBall[address.row + j][address.column]->setGlobalZOrder(address.row + j-1);
+					m_arrBall[address.row + j][address.column]->setGlobalZOrder(8-(address.row + j-1));
 				}
 				m_arrBall[address.row + j-1][address.column] = m_arrBall[address.row + j][address.column];
 				m_arrBall[address.row + j][address.column] = nullptr;
@@ -356,58 +356,71 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 	{
 		auto removeBirdFunc = [&](Node* ball){
 			auto bd = (BallSprite*)ball;
+			auto arr=bd->getAddress();
 			switch (bd->getSkillState())
 			{
 			case SKILL_STATE_NORMAL:
+				break;
 			case SKILL_STATE_BOMB:
+				if(arr.column>0&&m_arrBall[arr.row][arr.column-1]!=nullptr){
+					m_arrBall[arr.row][arr.column+1]->setVisible(false);
+					m_arrBall[arr.row][arr.column-1]->feather();
+					m_arrBall[arr.row][arr.column-1]=nullptr;
+				}
+				if(arr.column<6&&m_arrBall[arr.row][arr.column+1]!=nullptr){
+					m_arrBall[arr.row][arr.column+1]->setVisible(false);
+					m_arrBall[arr.row][arr.column+1]->feather();
+					m_arrBall[arr.row][arr.column+1]=nullptr;
+				}
+				break;
 			case SKILL_STATE_FIRE:
+				break;
 			case SKILL_STATE_LIGHTNING:
+				break;
 			case SKILL_STATE_BLACKHOLE:
+				break;
 			default:
 				break;
 			}
 			bd->setVisible(false);
-			auto arr=bd->getAddress();
-			auto ballBoundingBoxSize=bd->getContentSize();
+			bd->feather();
 			m_arrBall[arr.row][arr.column]=nullptr;
-			auto j=1;
-			while(arr.row + j<9&&m_arrBall[arr.row + j][arr.column]!=nullptr&&m_arrBall[arr.row + j][arr.column]->getActionState()!=ACTION_STATE_SHAKE)
-			{
-				auto k=1;
-				while (arr.row -k >= 0 && m_arrBall[arr.row -k][arr.column]==nullptr)
-				{
-					k++;
-				}
-				auto p = Point(arr.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(arr.row + j-k)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+		};
+		auto checkFunc = [&](Node* ball){
+			auto bd = (BallSprite*)ball;
+			auto ballBoundingBoxSize=bd->getContentSize();
+			for (auto i=8; i>0; i--) {
+				for (auto j=0; j<7; j++) {
+					if(m_arrBall[i-1][j]==nullptr){
+						auto k = 0;
+						while (m_arrBall[i+k][j]!=nullptr)
+						{
+							auto p = Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(i+k-1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
 
-				m_arrBall[arr.row + j][arr.column]->setPosition(p);
-				//m_arrBall[arr.row + j][arr.column]->MoveToAction(MoveTo::create(1/4.0f, p), 
-				//	[&](Node* ball){
-				//		/*auto bird = (BallSprite*)ball;
-				//		checkThreeAndAboveSameBall(bird);*/
-				//}
-				//, true);
-
-				m_arrBall[arr.row + j][arr.column]->setAddress(arr.row + j-k, arr.column);
-				if(m_arrBall[arr.row + j][arr.column]->getSkillState()!=SKILL_STATE_NORMAL)
-				{
-					m_arrBall[arr.row + j][arr.column]->setGlobalZOrder(19);
+							m_arrBall[i+k][j]->setPosition(p);
+							m_arrBall[i+k][j]->setAddress(i+k-1, j);
+							if(m_arrBall[i+k][j]->getSkillState()!=SKILL_STATE_NORMAL)
+							{
+								m_arrBall[i+k][j]->setGlobalZOrder(19);
+							}
+							else
+							{
+								m_arrBall[i+k][j]->setGlobalZOrder(8-(i+k));
+							}
+							m_arrBall[i+k-1][j] = m_arrBall[i+k][j];
+							k++;
+						}
+						m_arrBall[i+k-1][j] = nullptr;
+					}
 				}
-				else
-				{
-					m_arrBall[arr.row + j][arr.column]->setGlobalZOrder(arr.row + j-k);
-				}
-				m_arrBall[arr.row + j-k][arr.column] = m_arrBall[arr.row + j][arr.column];
-				m_arrBall[arr.row + j][arr.column] = nullptr;
-				j++;
 			}
 		};
 		auto count = sameBall.size();
 		auto k=0;
 		for(auto& bird : sameBall){
 			k++;
-			if(k==1 && count > 3){
-
+			if(k==1&&count > 3){
+				bird->isLast = false;
 				switch (count){
 				case 4:
 					if(bird->getSkillState() == SKILL_STATE_NORMAL){
@@ -433,7 +446,12 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 				}
 			}
 			else{
-				bird->remove(removeBirdFunc);
+				bird->isLast = false;
+				if(k==count)
+				{
+					bird->isLast = true;
+				}
+				bird->remove(removeBirdFunc, checkFunc);
 			}
 		}
 
