@@ -22,6 +22,10 @@ typedef enum{
 	ACTION_STATE_BLINK,
 	//µôÓðÃ«
 	ACTION_STATE_FEATHER,
+	//±¬Õ¨Ö®ºóÐÇÐÇ
+	ACTIOn_STATE_STAR,
+	//ÒÆ¶¯
+	ACTION_STATE_MOVE,
 	//»Î¶¯
 	ACTION_STATE_SHAKE,
 	//´ø¼¼ÄÜ×´Ì¬
@@ -50,7 +54,14 @@ public:
 	*/
 	void blink();
 
+	/**
+	*ÓðÃ«µôÂä
+	*/
 	void feather();
+
+	void star();
+
+	void bone();
 
 	void changeTo(SkillState skillState);
 
@@ -107,8 +118,6 @@ private:
 	Address address;
 
 	bool isVisited;
-
-	void removeFeather(Node* sender);
 
 	void changeToCallBack(SkillState skillState);
 };

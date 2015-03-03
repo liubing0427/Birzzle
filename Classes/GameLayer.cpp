@@ -22,13 +22,6 @@ bool GameLayer::init(){
 	grass->setGlobalZOrder(999);
 	this->addChild(grass);
 
-	/*Sprite* edgeSpace=Sprite::create();
-	PhysicsBody* boundBody=PhysicsBody::createEdgeBox(tree->getBoundingBox().size*0.9f,PHYSICSBODY_MATERIAL_DEFAULT,3);
-
-	edgeSpace->setPhysicsBody(boundBody);
-	edgeSpace->setPosition(Point(visiableSize.width/2 , (visiableSize.height*7)/16));
-	this->addChild(edgeSpace);*/
-
 	this->initBall(tree);
 	this->registerTouchBall();
 
@@ -88,14 +81,6 @@ void GameLayer::initBall(Sprite *tree)
 			m_arrBall[i][j]->setPosition(position);
 			m_arrBall[i][j]->blink();
 			m_arrBall[i][j]->setGlobalZOrder(8-i);
-			/*PhysicsBody *body = PhysicsBody::create();
-			auto visiableSize = Director::getInstance()->getVisibleSize();
-			auto bodyPosition = Point(ballBoundingBoxSize.width*70/240+(visiableSize.width-tree->getBoundingBox().size.width)/2-15*j,ballBoundingBoxSize.height*70/240+((visiableSize.height*7)/16-tree->getBoundingBox().size.height/2)-15*i);
-			body->addShape(PhysicsShapeBox::create(Size(ballBoundingBoxSize.width*60/120,ballBoundingBoxSize.height*60/120),PHYSICSBODY_MATERIAL_DEFAULT,bodyPosition));
-			body->setDynamic(true);
-			body->setLinearDamping(0.0f);
-			body->setGravityEnable(false);
-			m_arrBall[i][j]->setPhysicsBody(body);*/
 
 			tree->addChild(m_arrBall[i][j],0);
 			m_arrBall[i][j]->setAddress(i,j);
@@ -357,14 +342,21 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 		auto removeBirdFunc = [&](Node* ball){
 			auto bd = (BallSprite*)ball;
 			auto arr=bd->getAddress();
+			auto ballBoundingBoxSize=bd->getContentSize();
+			Sprite *vertical;
+			Sprite *horizontal;
 			switch (bd->getSkillState())
 			{
 			case SKILL_STATE_NORMAL:
+				bd->setVisible(false);
+				bd->feather();
+				m_arrBall[arr.row][arr.column]=nullptr;
 				break;
 			case SKILL_STATE_BOMB:
 				if(arr.column>0&&m_arrBall[arr.row][arr.column-1]!=nullptr){
-					m_arrBall[arr.row][arr.column+1]->setVisible(false);
+					m_arrBall[arr.row][arr.column-1]->setVisible(false);
 					m_arrBall[arr.row][arr.column-1]->feather();
+					m_arrBall[arr.row][arr.column-1]->star();
 					m_arrBall[arr.row][arr.column-1]=nullptr;
 				}
 				if(arr.column<6&&m_arrBall[arr.row][arr.column+1]!=nullptr){
@@ -372,19 +364,47 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 					m_arrBall[arr.row][arr.column+1]->feather();
 					m_arrBall[arr.row][arr.column+1]=nullptr;
 				}
+				bd->setVisible(false);
+				bd->feather();
+				bd->star();
+				m_arrBall[arr.row][arr.column]=nullptr;
 				break;
 			case SKILL_STATE_FIRE:
 				break;
 			case SKILL_STATE_LIGHTNING:
+				vertical = Sprite::create("lightning_col@2x.png");
+				horizontal = Sprite::create("lightning_row@2x.png");
+				vertical->setAnchorPoint(Point::ZERO);
+				vertical->setPosition(arr.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,0*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+				horizontal->setAnchorPoint(Point::ZERO);
+				horizontal->setPosition(0*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,arr.row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+				vertical->setTag(998);
+				horizontal->setTag(999);
+				bd->getParent()->addChild(vertical);
+				bd->getParent()->addChild(horizontal);
+				for (auto i=0;i<7;i++){
+					if(m_arrBall[i][arr.column]!=nullptr){
+						m_arrBall[i][arr.column]->bone();
+					}
+				}
+				for (auto j=0;j<9;j++){
+					if(m_arrBall[arr.row][j]!=nullptr){
+						m_arrBall[arr.row][j]->bone();
+					}
+				}
+
+				this->runAction(Sequence::create(
+					DelayTime::create(0.05f),
+					CallFunc::create(CC_CALLBACK_0(GameLayer::lightingCallback, this, bd)), nullptr));
 				break;
 			case SKILL_STATE_BLACKHOLE:
 				break;
 			default:
+				bd->setVisible(false);
+				bd->feather();
+				m_arrBall[arr.row][arr.column]=nullptr;
 				break;
 			}
-			bd->setVisible(false);
-			bd->feather();
-			m_arrBall[arr.row][arr.column]=nullptr;
 		};
 		auto checkFunc = [&](Node* ball){
 			auto bd = (BallSprite*)ball;
@@ -458,13 +478,33 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 	}
 }
 
+void GameLayer::lightingCallback(BallSprite* bd){
+	auto arr=bd->getAddress();
+	for (auto i=0;i<7;i++){
+		if(m_arrBall[i][arr.column]!=nullptr){
+			m_arrBall[i][arr.column]->setVisible(false);
+			m_arrBall[i][arr.column] = nullptr;
+		}
+	}
+	for (auto j=0;j<9;j++){
+		if(m_arrBall[arr.row][j]!=nullptr){
+			m_arrBall[arr.row][j]->setVisible(false);
+			m_arrBall[arr.row][j] = nullptr;
+		}
+	}
+	bd->getParent()->removeChildByTag(998);
+	bd->getParent()->removeChildByTag(999);
+	bd->setVisible(false);
+	bd->feather();
+	m_arrBall[arr.row][arr.column]=nullptr;
+}
+
 void GameLayer::produceNewBallFill()
 {
 	
 }
 
-void GameLayer::onExit()
-{
+void GameLayer::onExit(){
 	_eventDispatcher->removeEventListener(m_listener1);
 
 	Layer::onExit();
