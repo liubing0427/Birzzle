@@ -24,6 +24,8 @@ const int BIRD_WIDTH = 73;
 
 const int BIRD_INIT_ROW = 6; //小鸟初始行数
 
+const int WIDTH = 100;
+
 /**
 * Define the game status
 * GAME_STATUS_READY game is not start, just ready for payer to start.

@@ -24,7 +24,7 @@ bool BallSprite::init(){
 	SpriteFrame *spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(name);
 	if(spriteFrame&&this->initWithSpriteFrame(spriteFrame))
 	{
-		this->setScale(0.80f);
+		//this->setScale(0.80f);
 		this->blinkAction = Repeat::create(Sequence::create(
 			DelayTime::create(10.0f), 
 			CallFunc::create([&](){
@@ -287,8 +287,8 @@ void BallSprite::changeToCallBack(SkillState skillState){
 					sprintf(str, "%s_0%d.png", name.c_str(), i);
 				}
 				auto skill = Sprite::createWithSpriteFrameName(str);
-				skill->setScale(1.1f);
-				skill->setPosition(this->boundingBox().size.width/2+10, this->boundingBox().size.height/2+10);
+				//skill->setScale(1.1f);
+				skill->setPosition(this->boundingBox().size.width/2, this->boundingBox().size.height/2);
 				skill->setGlobalZOrder(21);
 				this->addChild(skill);
 			}));

@@ -76,7 +76,7 @@ void GameLayer::initBall(Sprite *tree)
 	for (auto i=0; i<BIRD_INIT_ROW; i++) {
 		for (auto j=0; j<7; j++) {
 			auto ballBoundingBoxSize=m_arrBall[i][j]->getContentSize();
-			auto position=Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,i*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+			auto position=Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,i*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 			m_arrBall[i][j]->setAnchorPoint(Point::ZERO);
 			m_arrBall[i][j]->setPosition(position);
 			m_arrBall[i][j]->blink();
@@ -138,15 +138,15 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.width);
-	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.height);
+	auto x = (ballTouchCurrentPosition.x-X_SKEWING)*WIDTH/(BIRD_WIDTH*ballBoundingBoxSize.width);
+	auto y = (ballTouchCurrentPosition.y-Y_SKEWING)*WIDTH/(BIRD_WIDTH*ballBoundingBoxSize.height);
 	//floor向下 ceil向上
 	auto column = (int)round(x);
 	auto row = (int)round(y);
 	column = column<0?0:(column>6?6:column);
 	row = row<0?0:(row>8?8:row);
 	m_arrBall[address.row][address.column] = nullptr;
-	auto position = Point((column)*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+	auto position = Point((column)*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 	//x->column y->row
 	if(delta.x>0 && delta.y>0) //↗
 	{
@@ -227,9 +227,9 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto address=target->getAddress();
 	auto ballBoundingBoxSize=target->getContentSize();
-	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.width));
-	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*120/(BIRD_WIDTH*ballBoundingBoxSize.height));
-	target->setPosition(Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING));
+	auto column = (int)round((ballTouchCurrentPosition.x-X_SKEWING)*WIDTH/(BIRD_WIDTH*ballBoundingBoxSize.width));
+	auto row = (int)round((ballTouchCurrentPosition.y-Y_SKEWING)*WIDTH/(BIRD_WIDTH*ballBoundingBoxSize.height));
+	target->setPosition(Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,row*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING));
 	if(row==address.row&&column==address.column)
 	{
 		m_arrBall[address.row][address.column] = target;
@@ -243,7 +243,7 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 			target->setGlobalZOrder(8-(i+1));
 			target->setAddress(i+1, column);
 			m_arrBall[i+1][column]=target;
-			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(i+1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING)), 
+			target->MoveToAction(MoveTo::create(speed, Point(column*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,(i+1)*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING)), 
 			[&](Node* ball)
 			{
 				auto bird = (BallSprite*)ball;
@@ -254,7 +254,7 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 			auto j=1;
 			while(address.row + j<9&&m_arrBall[address.row + j][address.column]!=nullptr&&m_arrBall[address.row + j][address.column]->getActionState()!=ACTION_STATE_SHAKE)
 			{
-				auto p = Point(address.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(address.row + j-1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+				auto p = Point(address.column*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,(address.row + j-1)*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 
 				m_arrBall[address.row + j][address.column]->MoveToAction(MoveTo::create(1/4.0f, p), 
 					[&](Node* ball){
@@ -375,9 +375,9 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 				vertical = Sprite::create("lightning_col@2x.png");
 				horizontal = Sprite::create("lightning_row@2x.png");
 				vertical->setAnchorPoint(Point::ZERO);
-				vertical->setPosition(arr.column*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,0*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+				vertical->setPosition(arr.column*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,0*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 				horizontal->setAnchorPoint(Point::ZERO);
-				horizontal->setPosition(0*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,arr.row*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+				horizontal->setPosition(0*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,arr.row*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 				vertical->setTag(998);
 				horizontal->setTag(999);
 				bd->getParent()->addChild(vertical);
@@ -415,7 +415,7 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 						auto k = 0;
 						while (m_arrBall[i+k][j]!=nullptr)
 						{
-							auto p = Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/120 + X_SKEWING,(i+k-1)*ballBoundingBoxSize.height*BIRD_WIDTH/120 + Y_SKEWING);
+							auto p = Point(j*ballBoundingBoxSize.width*BIRD_WIDTH/WIDTH + X_SKEWING,(i+k-1)*ballBoundingBoxSize.height*BIRD_WIDTH/WIDTH + Y_SKEWING);
 
 							m_arrBall[i+k][j]->setPosition(p);
 							m_arrBall[i+k][j]->setAddress(i+k-1, j);
@@ -474,7 +474,6 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 				bird->remove(removeBirdFunc, checkFunc);
 			}
 		}
-
 	}
 }
 
