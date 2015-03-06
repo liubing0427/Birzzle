@@ -1,4 +1,5 @@
 #include "BallSprite.h"
+#include "GameLayer.h"
 
 BallSprite::BallSprite(){
 }
@@ -38,7 +39,7 @@ bool BallSprite::init(){
 				animation->setDelayPerUnit(0.1f);
 				Animate* animate = Animate::create(animation);
 				this->runAction(animate);
-			}),
+		}),
 			nullptr), -1);
 
 		this->featherName = String::createWithFormat("%s%s",birdName.c_str(), "_feather.png")->getCString();
@@ -124,7 +125,7 @@ void BallSprite::MoveToAction(ActionInterval* action, const std::function<void(N
 				{
 					this->feather();
 				}
-			}),
+		}),
 			CallFuncN::create(func), 
 			nullptr);
 		all->setTag(ACTION_STATE_MOVE); 
@@ -174,27 +175,56 @@ void BallSprite::clearFeather(){
 
 void BallSprite::star(){
 	if(changeActionState(ACTIOn_STATE_STAR)){
-		string name = String::createWithFormat("%s%d%s", "bomb_star_", (rand() % 3)+1,"@2x.png")->getCString();
-		auto star = Sprite::create(name);
-
-		int iRandPos = -(rand() % 51) + 25;
-		star->setPosition(Point(this->getPosition().x+iRandPos,this->getPosition().y));
-		star->setGlobalZOrder(21);
-		this->getParent()->addChild(star); 
-		star->setTag(ACTIOn_STATE_STAR);
-		auto all = Sequence::create(
-			DelayTime::create(0.2f),
-			CallFuncN::create([&](Node* sender){
-				auto sp = (Sprite*)sender;
-				this->getParent()->removeChild(sp,true);
-		}), nullptr);
-		star->runAction(all); 
+		CCParticleSystemQuad *_emitter = CCParticleSystemQuad::create("Explosion.plist");
+		this->getParent()->addChild(_emitter, 10);
+		_emitter->setAutoRemoveOnFinish(true);
+		_emitter->setEmissionRate(100.0f);
+		_emitter->setPosition(Point(this->getPosition().x + this->boundingBox().size.width/2,this->getPosition().y+this->boundingBox().size.height/2));
 	}
 }
 
 void BallSprite::bone(){
 	SpriteFrame *spriteFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName("bone.png");
 	this->setSpriteFrame(spriteFrame);
+}
+
+void BallSprite::burn(){
+	Animation *animation = Animation::create();
+	string burnname = String::createWithFormat("%s%s",this->birdName.c_str(), "_burn.png")->getCString();
+	SpriteFrame *burnFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(burnname);
+	string cloud = String::createWithFormat("%s%d%s","cloud_burn_0",rand()%4,".png")->getCString();
+	SpriteFrame *cloudFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(cloud);
+	animation->addSpriteFrame(burnFrame);
+	animation->addSpriteFrame(cloudFrame);
+	animation->setDelayPerUnit(0.05f);
+	Animate* animate = Animate::create(animation);
+	this->runAction(animate);
+}
+
+void BallSprite::fire(){
+	if(changeActionState(ACTION_STATE_FIRE)){
+		this->removeAllChildren();
+		Vector<FiniteTimeAction*> list;
+		for (auto i=0;i<12;i++){
+			list.pushBack(CallFunc::create([&,i](){
+				char str[50] = {0};
+				if(i<10){
+					sprintf(str, "firebird_00%d.png", i);
+				}
+				else{
+					sprintf(str, "firebird_0%d.png", i);
+				}
+				auto fire = Sprite::createWithSpriteFrameName(str);
+				fire->setPosition(this->boundingBox().size.width/2, this->boundingBox().size.height/2);
+				fire->setGlobalZOrder(21);
+				this->addChild(fire);
+			}));
+			list.pushBack(DelayTime::create(0.1f));
+		}
+		auto action = RepeatForever::create(Sequence::create(list));
+		action->setTag(ACTION_STATE_FIRE);
+		this->runAction(action);
+	}
 }
 
 Address BallSprite::getAddress(){
@@ -214,27 +244,168 @@ void BallSprite::setVisited(bool isVisited){
 	this->isVisited = isVisited;
 }
 
-void BallSprite::remove(const std::function<void(Node*)> &func, const std::function<void(Node*)> &checkFunc){
+void BallSprite::remove(bool isshake, SkillState skill){
 	if(this->actionState == ACTION_STATE_SHAKE || this->skillState != SKILL_STATE_NORMAL){
 		this->stopActionByTag(ACTION_STATE_SHAKE);
 		this->stopActionByTag(ACTION_STATE_SKILL);
 	}
 
 	if(changeActionState(ACTION_STATE_SHAKE)){
-		Sequence* action;
-		if(this->isLast)
-		{
-			action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
-				CallFuncN::create(func),
-				DelayTime::create(0.1f),
-				CallFuncN::create(checkFunc),
-				nullptr);
+		Vector<FiniteTimeAction*> list;
+		if(isshake){
+			list.pushBack(Shake::create(SHAKE_TIME, 3));
 		}
-		else
-		{
-			action = Sequence::create(Shake::create(SHAKE_TIME, 3), 
-				CallFuncN::create(func), nullptr);
+		double delay = 0;
+		auto speed = 0.1f;
+		auto count = 0;
+		switch (this->skillState){
+		case SKILL_STATE_NORMAL:
+			if(this->isLast && skill!=SKILL_STATE_NORMAL){
+				this->changeTo(skill);
+			}
+			else{
+				list.pushBack(CallFunc::create([&](){
+					this->feather();
+					GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+				}));
+			}
+			break;
+		case SKILL_STATE_BOMB:
+			list.pushBack(CallFunc::create([&](){
+				this->feather();
+				this->star();
+				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+				if(this->address.column>0&&this->address.row>0&&GameLayer::getInstance()->getBall(this->address.row-1,this->address.column-1)!=nullptr){//¨L
+					GameLayer::getInstance()->getBall(this->address.row-1,this->address.column-1)->remove(false, SKILL_STATE_NORMAL);
+				}
+				if(this->address.column>0&&GameLayer::getInstance()->getBall(this->address.row,this->address.column-1)!=nullptr){//¡û
+					GameLayer::getInstance()->getBall(this->address.row,this->address.column-1)->remove(false, SKILL_STATE_NORMAL);
+				}
+				if(this->address.column<6&&this->address.row>0&&GameLayer::getInstance()->getBall(this->address.row-1,this->address.column+1)!=nullptr){//¨K
+					GameLayer::getInstance()->getBall(this->address.row-1,this->address.column+1)->remove(false, SKILL_STATE_NORMAL);
+				}
+				if(this->address.column<6&&this->address.row<GAME_ROW-1&&GameLayer::getInstance()->getBall(this->address.row+1,this->address.column+1)!=nullptr){//¨J
+					GameLayer::getInstance()->getBall(this->address.row+1,this->address.column+1)->remove(false, SKILL_STATE_NORMAL);
+				}
+				if(this->address.column<6&&GameLayer::getInstance()->getBall(this->address.row,this->address.column+1)!=nullptr){//¡ú
+					GameLayer::getInstance()->getBall(this->address.row,this->address.column+1)->remove(false, SKILL_STATE_NORMAL);
+				}
+				if(this->address.column>0&&this->address.row<GAME_ROW-1&&GameLayer::getInstance()->getBall(this->address.row+1,this->address.column-1)!=nullptr){//¨I
+					GameLayer::getInstance()->getBall(this->address.row+1,this->address.column-1)->remove(false, SKILL_STATE_NORMAL);
+				}
+			}));
+			break;
+		case SKILL_STATE_FIRE:
+			list.pushBack(CallFunc::create([&](){//×Å»ð
+				this->fire();
+				count = this->address.row;
+				while (count>0)
+				{
+					count--;
+					GameLayer::getInstance()->removeFromArray(count, this->address.column);
+				}
+			}));
+			speed += this->address.row/4.0f;
+			list.pushBack(MoveTo::create(this->address.row/4.0f,Point(this->address.column*BIRD_WIDTH + X_SKEWING, 0 + Y_SKEWING)));//ÏÂÂä
+			list.pushBack(CallFunc::create([&](){//Ã°ÑÌ
+				if(this->address.column>0&&GameLayer::getInstance()->getBall(0, this->address.column-1)!=nullptr){//¡û
+					GameLayer::getInstance()->getBall(0, this->address.column-1)->burn();
+				}
+				if(this->address.column>0&&GameLayer::getInstance()->getBall(1, this->address.column-1)!=nullptr){//¨I
+					GameLayer::getInstance()->getBall(1, this->address.column-1)->burn();
+				}
+				if(this->address.column<6&&GameLayer::getInstance()->getBall(0, this->address.column+1)!=nullptr){//¡ú
+					GameLayer::getInstance()->getBall(0, this->address.column+1)->burn();
+				}
+				if(this->address.column<6&&GameLayer::getInstance()->getBall(1, this->address.column+1)!=nullptr){//¨J
+					GameLayer::getInstance()->getBall(1, this->address.column+1)->burn();
+				}
+			}));
+			speed += 0.1f;
+			list.pushBack(DelayTime::create(0.1f));
+			list.pushBack(CallFunc::create([&](){//É¾³ý
+				if(this->address.column>0&&GameLayer::getInstance()->getBall(0, this->address.column-1)!=nullptr){//¡û
+					GameLayer::getInstance()->removeFromArray(0, this->address.column-1);
+				}
+				if(this->address.column>0&&GameLayer::getInstance()->getBall(1, this->address.column-1)!=nullptr){//¨I
+					GameLayer::getInstance()->removeFromArray(1, this->address.column-1);
+				}
+				if(this->address.column<6&&GameLayer::getInstance()->getBall(0, this->address.column+1)!=nullptr){//¡ú
+					GameLayer::getInstance()->removeFromArray(0, this->address.column+1);
+				}
+				if(this->address.column<6&&GameLayer::getInstance()->getBall(1, this->address.column+1)!=nullptr){//¨J
+					GameLayer::getInstance()->removeFromArray(1, this->address.column+1);
+				}
+				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+			}));
+			break;
+		case SKILL_STATE_LIGHTNING:
+			list.pushBack(CallFunc::create([&](){
+				auto vertical = Sprite::create("lightning_col@2x.png");
+				auto horizontal = Sprite::create("lightning_row@2x.png");
+				vertical->setAnchorPoint(Point::ZERO);
+				vertical->setPosition(this->address.column*BIRD_WIDTH + X_SKEWING,0*BIRD_WIDTH + Y_SKEWING);
+				horizontal->setAnchorPoint(Point::ZERO);
+				horizontal->setPosition(0*BIRD_WIDTH + X_SKEWING,this->address.row*BIRD_WIDTH + Y_SKEWING);
+				vertical->setTag(998);
+				horizontal->setTag(999);
+				this->getParent()->addChild(vertical);
+				this->getParent()->addChild(horizontal);
+
+				for (auto i=0;i<7;i++){
+					if(GameLayer::getInstance()->getBall(i, this->address.column)!=nullptr){
+						GameLayer::getInstance()->getBall(i, this->address.column)->bone();
+					}
+				}
+				for (auto j=0;j<GAME_ROW;j++){
+					if(GameLayer::getInstance()->getBall(this->address.row, j)!=nullptr){
+						GameLayer::getInstance()->getBall(this->address.row, j)->bone();
+					}
+				}
+			}));
+			list.pushBack(DelayTime::create(0.05f));
+			list.pushBack(CallFunc::create([&](){
+				for (auto i=0;i<7;i++){
+					if(GameLayer::getInstance()->getBall(i, this->address.column)!=nullptr){
+						GameLayer::getInstance()->removeFromArray(i, this->address.column);
+					}
+				}
+				for (auto j=0;j<GAME_ROW;j++){
+					if(GameLayer::getInstance()->getBall(this->address.row, j)!=nullptr){
+						GameLayer::getInstance()->removeFromArray(this->address.row, j);
+					}
+				}
+				this->getParent()->removeChildByTag(998);
+				this->getParent()->removeChildByTag(999);
+				this->feather();
+				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+			}));
+			break;
+		case SKILL_STATE_BLACKHOLE:
+			break;
+		default:
+			this->feather();
+			GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+			break;
 		}
+		if(this->isLast){
+			list.pushBack(DelayTime::create(speed));
+			list.pushBack(CallFunc::create([&](){
+				for (auto i=GAME_ROW-1; i>0; i--) {
+					for (auto j=0; j<7; j++) {
+						if(GameLayer::getInstance()->getBall(i-1, j)==nullptr){
+							auto k = 0;
+							while (GameLayer::getInstance()->getBall(i+k, j)!=nullptr)
+							{
+								GameLayer::getInstance()->swithBall(i+k,j, i+k-1,j);
+								k++;
+							}
+						}
+					}
+				}
+			}));
+		}
+		Sequence* action = Sequence::create(list);
 		action->setTag(ACTION_STATE_SHAKE);
 		this->runAction(action);
 	}
@@ -290,6 +461,7 @@ void BallSprite::changeToCallBack(SkillState skillState){
 				//skill->setScale(1.1f);
 				skill->setPosition(this->boundingBox().size.width/2, this->boundingBox().size.height/2);
 				skill->setGlobalZOrder(21);
+				this->setGlobalZOrder(19);
 				this->addChild(skill);
 			}));
 			list.pushBack(DelayTime::create(0.2f));

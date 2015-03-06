@@ -1,3 +1,6 @@
+#ifndef __BALLSPRITE_H__
+#define __BALLSPRITE_H__
+
 #include "cocos2d.h"
 #include "AtlasLoader.h"
 #include "Shake.h"
@@ -30,6 +33,8 @@ typedef enum{
 	ACTION_STATE_SHAKE,
 	//带技能状态
 	ACTION_STATE_SKILL,
+	//火球下落
+	ACTION_STATE_FIRE,
 }ActionState;
 
 typedef struct
@@ -37,6 +42,8 @@ typedef struct
 	int row;
 	int column;
 }Address;
+
+class GameLayer;
 
 class BallSprite:public Sprite{
 public:
@@ -63,6 +70,10 @@ public:
 
 	void bone();
 
+	void burn();
+
+	void fire();
+
 	void changeTo(SkillState skillState);
 
 	void MoveToAction(ActionInterval* action, const std::function<void(Node*)> &func, bool isYChange);
@@ -77,7 +88,7 @@ public:
 
 	void setVisited(bool isVisited);
 
-	void remove(const std::function<void(Node*)> &func, const std::function<void(Node*)> &checkFunc);
+	void remove(bool isshake, SkillState skill);
 
 	ActionState getActionState();
 
@@ -121,3 +132,4 @@ private:
 
 	void changeToCallBack(SkillState skillState);
 };
+#endif

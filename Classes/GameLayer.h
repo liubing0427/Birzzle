@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __GAMELAYER_H__
+#define __GAMELAYER_H__
 
 #include "cocos2d.h"
 //#include "UserRecord.h"
@@ -7,6 +8,7 @@
 #include "BackgroundLayer.h"
 #include "AtlasLoader.h"
 #include "SimpleAudioEngine.h"
+#include <algorithm>
 #include <cstdlib>
 
 using namespace cocos2d;
@@ -25,6 +27,8 @@ const int BIRD_WIDTH = 73;
 const int BIRD_INIT_ROW = 6; //小鸟初始行数
 
 const int WIDTH = 100;
+
+const int GAME_ROW = 9;
 
 /**
 * Define the game status
@@ -69,7 +73,6 @@ protected:
 
 	double round(double number);
 
-	void checkAbove(Address address, Size ballBoundingBoxSize);//消除小球后，使上层小球下落
 public:
 	GameLayer();
 
@@ -85,6 +88,14 @@ public:
 	//* This layer need physical engine work
 	//*/
 	void setPhyWorld(PhysicsWorld* world){this->world = world;}
+
+	void removeFromArray(int row, int column);
+
+	BallSprite* getBall(int row, int column);
+
+	void swithBall(int row, int column, int destrow, int destcolumn);
+
+	static GameLayer* getInstance();
 
 private:
     
@@ -102,5 +113,6 @@ private:
 	void onTouchMoved(Touch* touch, Event* event);
 	void onTouchEnded(Touch* touch, Event* event);
 
-	void lightingCallback(BallSprite* bd);
+	static GameLayer* shared;
 };
+#endif
