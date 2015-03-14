@@ -15,27 +15,27 @@ bool GameScene::init(){
 			this->addChild(backgroundLayer);
 		}
 
-		//auto statusLayer = StatusLayer::create();
+		auto statusLayer = StatusLayer::create();
 
 		// Add the main game layer
 		auto gameLayer = GameLayer::create();
 		if(gameLayer) {
 			gameLayer->setPhyWorld(this->getPhysicsWorld());
-			/*gameLayer->setDelegator(statusLayer);*/
+			gameLayer->setDelegator(statusLayer);
 			this->addChild(gameLayer);
 		}
 
 		//// Add the game status layer to show the score and game status
-		//if(statusLayer) {
-		//	this->addChild(statusLayer);
-		//}
+		if(statusLayer) {
+			this->addChild(statusLayer);
+		}
 
 		//// Add operation layer to control the game
-		//auto optionLayer = OptionLayer::create();
-		//if(optionLayer) {
-		//	optionLayer->setDelegator(gameLayer);
-		//	this->addChild(optionLayer);
-		//}
+		auto optionLayer = OptionLayer::create();
+		if(optionLayer) {
+			optionLayer->setDelegator(gameLayer);
+			this->addChild(optionLayer);
+		}
 		return true;
 	}else {
 		return false;

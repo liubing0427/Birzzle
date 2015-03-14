@@ -25,6 +25,11 @@ void LoadingScene::loading(){
 	AtlasLoader::getInstance()->loadAtlas("Character_100.plist");
 	AtlasLoader::getInstance()->loadAtlas("Item_100.plist");
 	AtlasLoader::getInstance()->loadAtlas("GameSheet_100.plist");
+	AtlasLoader::getInstance()->loadAtlas("stage_gameover_num1@2x.plist");
+	AtlasLoader::getInstance()->loadAtlas("stage_gameover_num2@2x.plist");
+	AtlasLoader::getInstance()->loadAtlas("stage_menubar_level_num@2x.plist");
+	AtlasLoader::getInstance()->loadAtlas("stage_menubar_score@2x.plist");
+	AtlasLoader::getInstance()->loadAtlas("stage_level@2x.plist");
 
 	// After loading the texture , preload all the sound
 	/*SimpleAudioEngine::getInstance()->preloadEffect("sfx_die.ogg");

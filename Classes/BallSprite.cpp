@@ -274,7 +274,6 @@ void BallSprite::remove(bool isshake, SkillState skill){
 			list.pushBack(CallFunc::create([&](){
 				this->feather();
 				this->star();
-				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
 				if(this->address.column>0&&this->address.row>0&&GameLayer::getInstance()->getBall(this->address.row-1,this->address.column-1)!=nullptr){//¨L
 					GameLayer::getInstance()->getBall(this->address.row-1,this->address.column-1)->remove(false, SKILL_STATE_NORMAL);
 				}
@@ -293,6 +292,7 @@ void BallSprite::remove(bool isshake, SkillState skill){
 				if(this->address.column>0&&this->address.row<GAME_ROW-1&&GameLayer::getInstance()->getBall(this->address.row+1,this->address.column-1)!=nullptr){//¨I
 					GameLayer::getInstance()->getBall(this->address.row+1,this->address.column-1)->remove(false, SKILL_STATE_NORMAL);
 				}
+				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
 			}));
 			break;
 		case SKILL_STATE_FIRE:
@@ -395,7 +395,7 @@ void BallSprite::remove(bool isshake, SkillState skill){
 					for (auto j=0; j<7; j++) {
 						if(GameLayer::getInstance()->getBall(i-1, j)==nullptr){
 							auto k = 0;
-							while (GameLayer::getInstance()->getBall(i+k, j)!=nullptr)
+							while (i+k<9&&GameLayer::getInstance()->getBall(i+k, j)!=nullptr)
 							{
 								GameLayer::getInstance()->swithBall(i+k,j, i+k-1,j);
 								k++;

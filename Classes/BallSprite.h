@@ -6,7 +6,7 @@
 #include "Shake.h"
 using namespace cocos2d;
 
-const int SHAKE_TIME = 2.0f;
+const int SHAKE_TIME = 1.5f;
 
 typedef enum{
 	SKILL_STATE_NORMAL,

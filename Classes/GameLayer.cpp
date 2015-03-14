@@ -9,25 +9,46 @@ bool GameLayer::init(){
 		return false;
 	}
 
-	auto visiableSize = Director::getInstance()->getVisibleSize();
-	auto visibleOrigin = Director::getInstance()->getVisibleOrigin();
+	this->visiableSize = Director::getInstance()->getVisibleSize();
+	this->visibleOrigin = Director::getInstance()->getVisibleOrigin();
 
-	Sprite *tree = Sprite::create("stage_tree@2x.png");
-	tree->setPosition(Point(visiableSize.width/2 , (visiableSize.height*7)/16));
-	this->addChild(tree);
+	this->gameStatus = GAME_STATUS_READY;
+	this->score = 0;
+	this->popBirds = 0;
+
+	Sprite *ttree = Sprite::create("stage_tree@2x.png");
+	ttree->setPosition(Point(visiableSize.width/2 , (visiableSize.height*7)/16));
+	this->addChild(ttree);
+	this->tree = ttree;
 
 	Sprite *grass = Sprite::create("stage_tree_grass_r@2x.png");
 	grass->setAnchorPoint(Point::ZERO);
 	grass->setPosition(Point(visiableSize.width/2-grass->getBoundingBox().size.width/2, 0));
-	grass->setGlobalZOrder(999);
+	grass->setGlobalZOrder(90);
 	this->addChild(grass);
-
-	this->initBall(tree);
-	this->registerTouchBall();
+	this->initBall();
+	for (auto j=0; j<7; j++) {
+		m_newBall[j]=nullptr;
+	}
+	this->produceNewBall();
 
 	shared = this;
 
+	//create the quit menu
+	Sprite* quitBtn = Sprite::create("pauseButton@2x.png");
+	auto  quitMenuItem = MenuItemSprite::create(quitBtn,nullptr,nullptr,CC_CALLBACK_1(GameLayer::menuPauseCallback,this));
+
+	auto menu = Menu::create(quitMenuItem, NULL);
+	menu->alignItemsHorizontallyWithPadding(20.0f);
+	menu->setPosition(Point((visiableSize.width*3)/40 , (visiableSize.height * 22) / 23));
+	this->addChild(menu, 100);
+
 	return true;
+}
+
+void GameLayer::menuPauseCallback(Object *sender){
+	this->pause();
+	this->delegator->onGamePause();
 }
 
 GameLayer* GameLayer::shared = nullptr;
@@ -36,7 +57,7 @@ GameLayer* GameLayer::getInstance(){
 	return shared;
 }
 
-void GameLayer::initBall(Sprite *tree)
+void GameLayer::initBall()
 {
 	//lambda表达式
 	auto randProduceBall = [](string ballname){
@@ -54,21 +75,21 @@ void GameLayer::initBall(Sprite *tree)
 			if(i<BIRD_INIT_ROW)
 			{
 				string ballname = BallSprite::createBallByRandom();
-				//if (j>=2 && i<2){
-				//	if(ballname==m_arrBall[i][j-1]->getName()&&ballname==m_arrBall[i][j-2]->getName()){
-				//		ballname = randProduceBall(ballname);//重新生成
-				//	}
-				//} else if (j<2 && i>=2){
-				//	if(ballname==m_arrBall[i-1][j]->getName() && ballname==m_arrBall[i-2][j]->getName()){
-				//		ballname = randProduceBall(ballname);//重新生成
-				//	}
-				//}else if (j>=2 && i>=2){
-				//	while((ballname==m_arrBall[i][j-1]->getName() && ballname==m_arrBall[i][j-2]->getName()) ||
-				//		(ballname==m_arrBall[i-1][j]->getName() && ballname==m_arrBall[i-2][j]->getName()))
-				//	{
-				//		ballname = randProduceBall(ballname);//重新生成
-				//	}
-				//}
+				if (j>=2 && i<2){
+					if(ballname==m_arrBall[i][j-1]->getName()&&ballname==m_arrBall[i][j-2]->getName()){
+						ballname = randProduceBall(ballname);//重新生成
+					}
+				} else if (j<2 && i>=2){
+					if(ballname==m_arrBall[i-1][j]->getName() && ballname==m_arrBall[i-2][j]->getName()){
+						ballname = randProduceBall(ballname);//重新生成
+					}
+				}else if (j>=2 && i>=2){
+					while((ballname==m_arrBall[i][j-1]->getName() && ballname==m_arrBall[i][j-2]->getName()) ||
+						(ballname==m_arrBall[i-1][j]->getName() && ballname==m_arrBall[i-2][j]->getName()))
+					{
+						ballname = randProduceBall(ballname);//重新生成
+					}
+				}
 				BallSprite* temp_ball = BallSprite::createBall(ballname);
 				m_arrBall[i][j]=temp_ball;
 			}
@@ -251,7 +272,23 @@ void GameLayer::onTouchEnded(Touch* touch, Event* event)
 	target->setPosition(Point(column*BIRD_WIDTH + X_SKEWING,row*BIRD_WIDTH + Y_SKEWING));
 	if(row==address.row&&column==address.column)
 	{
-		m_arrBall[address.row][address.column] = target;
+		if(m_arrBall[address.row][address.column]==nullptr||m_arrBall[address.row][address.column]==target)
+		{
+			m_arrBall[address.row][address.column] = target;
+		}
+		else
+		{
+			auto p=1;
+			while (m_arrBall[address.row+p][address.column]!=nullptr)
+			{
+				p++;
+			}
+
+			target->setPosition(Point(column*BIRD_WIDTH + X_SKEWING,(address.row+p)*BIRD_WIDTH + Y_SKEWING));
+			target->setGlobalZOrder((GAME_ROW-1)-(address.row+p));
+			target->setAddress(address.row+p, column);
+			m_arrBall[address.row+p][column]=target;
+		}
 		return;
 	}
 	for (auto i=row;i>=-1;i--)
@@ -386,9 +423,71 @@ void GameLayer::checkThreeAndAboveSameBall(BallSprite* sprite)
 	}
 }
 
-void GameLayer::produceNewBallFill()
+void GameLayer::produceNewBall()
 {
-	
+	//lambda表达式
+	auto randProduceBall = [](string ballname){
+		string name = BallSprite::createBallByRandom();
+		while (name==ballname)
+		{
+			name = BallSprite::createBallByRandom();
+		}
+		return name;
+	};
+
+	//初始化小球布局算法
+	auto isGameOver = true;
+	for (auto j=0; j<7; j++) {
+		if(m_newBall[j]==nullptr){
+			isGameOver = false;
+			string ballname = BallSprite::createBallByRandom();
+			if (j>=2){
+				if(ballname==m_newBall[j-1]->getName()&&ballname==m_newBall[j-2]->getName()){
+					ballname = randProduceBall(ballname);//重新生成
+				}
+			}
+			BallSprite* temp_ball = BallSprite::createBall(ballname);
+			m_newBall[j]=temp_ball;
+			//将小球显示出来
+			auto position=Point(j*BIRD_WIDTH + X_SKEWING,10*BIRD_WIDTH + 45);
+			m_newBall[j]->setAnchorPoint(Point::ZERO);
+			m_newBall[j]->setPosition(position);
+			m_newBall[j]->blink();
+			m_newBall[j]->setGlobalZOrder(10);
+
+			tree->addChild(m_newBall[j],0);
+		}
+	}
+	if (isGameOver)
+	{
+		this->gameOver();
+	}
+}
+
+void GameLayer::fallDown(float dt){
+	for (auto j=0; j<7; j++) {
+		if(m_arrBall[8][j]==nullptr){
+			auto k = 0;
+			while (m_arrBall[k][j]!=nullptr)
+			{
+				k++;
+			}
+			m_arrBall[k][j] = m_newBall[j];
+			m_newBall[j] = nullptr;
+			m_arrBall[k][j]->setAddress(k,j);
+			m_arrBall[k][j]->setGlobalZOrder(GAME_ROW-1-k);
+			auto p = Point(j*BIRD_WIDTH + X_SKEWING,k*BIRD_WIDTH + Y_SKEWING);
+			m_arrBall[k][j]->MoveToAction(MoveTo::create((8-k)/8.0f, p), 
+				[&](Node* ball)
+			{
+				auto bird = (BallSprite*)ball;
+				_eventDispatcher->addEventListenerWithSceneGraphPriority(m_listener1->clone(), bird);
+				checkThreeAndAboveSameBall(bird);
+			}
+			,true);
+		}
+	}
+	produceNewBall();
 }
 
 void GameLayer::removeFromArray(int row, int column){
@@ -422,4 +521,38 @@ void GameLayer::onExit(){
 	_eventDispatcher->removeEventListener(m_listener1);
 
 	Layer::onExit();
+}
+
+void GameLayer::gameOver(){
+	if(this->gameStatus == GAME_STATUS_OVER) {
+		return;
+	}
+	_eventDispatcher->removeEventListener(m_listener1);
+	tree->runAction(Sequence::create(MoveTo::create(0.3f, Point(visiableSize.width/2 , -(visiableSize.height* 3)/16)), CallFunc::create([&](){
+		this->delegator->onGameEnd(this->score, this->popBirds);
+	}), nullptr));
+	this->unschedule(schedule_selector(GameLayer::fallDown));  
+	//SimpleAudioEngine::getInstance()->playEffect("sfx_die.ogg");
+	this->gameStatus = GAME_STATUS_OVER;
+}
+
+void GameLayer::onTouch() {
+	if(this->gameStatus == GAME_STATUS_OVER){
+		return;
+	}
+	if(this->gameStatus == GAME_STATUS_READY) {
+		if(this->delegator->isGameStart()){
+			this->registerTouchBall();
+			for (auto j=0;j<7;j++)
+			{
+				checkThreeAndAboveSameBall(m_arrBall[1][j]);
+			}
+
+			schedule(schedule_selector(GameLayer::fallDown), 10.0f);
+
+			this->gameStatus = GAME_STATUS_START;
+		}
+	}
+	else if(this->gameStatus == GAME_STATUS_START) {
+	}
 }
