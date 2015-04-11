@@ -35,6 +35,8 @@ typedef enum{
 	ACTION_STATE_SKILL,
 	//»ðÇòÏÂÂä
 	ACTION_STATE_FIRE,
+	//ºÚ¶´
+	ACTION_STATE_HOLE,
 }ActionState;
 
 typedef struct
@@ -73,6 +75,8 @@ public:
 	void burn();
 
 	void fire();
+
+	void blackHole();
 
 	void changeTo(SkillState skillState);
 

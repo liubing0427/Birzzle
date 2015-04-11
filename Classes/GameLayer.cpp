@@ -253,16 +253,12 @@ void GameLayer::onTouchMoved(Touch* touch, Event* event)
 		}
 	}
 	target->setPosition(target->getPosition() + touch->getDelta());
-	//this->setBallExchange(target);
 }
 
 void GameLayer::onTouchEnded(Touch* touch, Event* event)
 {
 	auto target = static_cast<BallSprite*>(event->getCurrentTarget());
-	//target->getPhysicsBody()->setDynamic(false);
 	log("sprite onTouchesEnded.. ");
-	/*target->setZOrder(0);
-	target->setOpacity(255);*/
 
 	auto ballTouchCurrentPosition=target->getPosition();
 	auto address=target->getAddress();
@@ -492,9 +488,12 @@ void GameLayer::fallDown(float dt){
 
 void GameLayer::removeFromArray(int row, int column){
 	if(m_arrBall[row][column]!=nullptr){
+		log("begin unvisible... row = %d, column = %d", row, column);
 		m_arrBall[row][column]->setVisible(false);
+		log("end unvisible... row = %d, column = %d", row, column);
+		m_arrBall[row][column]=nullptr;
+		log("remove... row = %d, column = %d", row, column);
 	}
-	m_arrBall[row][column]=nullptr;
 }
 
 BallSprite* GameLayer::getBall(int row, int column){
@@ -502,6 +501,7 @@ BallSprite* GameLayer::getBall(int row, int column){
 }
 
 void GameLayer::swithBall(int row, int column, int destrow, int destcolumn){
+	log("begin switch... row = %d, column = %d, destrow = %d, destcolumn = %d", row, column, destrow, destcolumn);
 	auto p = Point(destcolumn*BIRD_WIDTH + X_SKEWING,destrow*BIRD_WIDTH + Y_SKEWING);
 	m_arrBall[row][column]->setPosition(p);
 	m_arrBall[row][column]->setAddress(destrow, destcolumn);
@@ -515,6 +515,7 @@ void GameLayer::swithBall(int row, int column, int destrow, int destcolumn){
 	}
 	m_arrBall[destrow][destcolumn] = m_arrBall[row][column];
 	m_arrBall[row][column] = nullptr;
+	log("end switch... row = %d, column = %d, destrow = %d, destcolumn = %d", row, column, destrow, destcolumn);
 }
 
 void GameLayer::onExit(){
@@ -554,5 +555,14 @@ void GameLayer::onTouch() {
 		}
 	}
 	else if(this->gameStatus == GAME_STATUS_START) {
+	}
+}
+
+void GameLayer::startOrStopSchedule(bool isStart){
+	if (isStart){
+		_scheduler->resumeTarget(this);
+	}
+	else{
+		_scheduler->pauseTarget(this);
 	}
 }

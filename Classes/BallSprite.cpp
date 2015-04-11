@@ -201,6 +201,32 @@ void BallSprite::burn(){
 	this->runAction(animate);
 }
 
+void BallSprite::blackHole(){
+	if(changeActionState(ACTION_STATE_HOLE)){
+		this->removeAllChildren();
+		Vector<FiniteTimeAction*> list;
+		for (auto i=0;i<13;i++){
+			list.pushBack(CallFunc::create([&,i](){
+				char str[50] = {0};
+				if(i<10){
+					sprintf(str, "Blackhole_00%d.png", i);
+				}
+				else{
+					sprintf(str, "Blackhole_0%d.png", i);
+				}
+				auto hole = Sprite::createWithSpriteFrameName(str);
+				hole->setPosition(this->boundingBox().size.width/2, this->boundingBox().size.height/2);
+				hole->setGlobalZOrder(21);
+				this->addChild(hole);
+			}));
+			list.pushBack(DelayTime::create(0.1f));
+		}
+		auto action = RepeatForever::create(Sequence::create(list));
+		action->setTag(ACTION_STATE_HOLE);
+		this->runAction(action);
+	}
+}
+
 void BallSprite::fire(){
 	if(changeActionState(ACTION_STATE_FIRE)){
 		this->removeAllChildren();
@@ -382,6 +408,22 @@ void BallSprite::remove(bool isshake, SkillState skill){
 			}));
 			break;
 		case SKILL_STATE_BLACKHOLE:
+			list.pushBack(CallFunc::create([&](){
+				GameLayer::getInstance()->startOrStopSchedule(false);
+				this->blackHole();
+				for (auto i=0; i<GAME_ROW; i++) {
+					for (auto j=0; j<7; j++) {
+						if(GameLayer::getInstance()->getBall(i, j)!=nullptr && (i != this->address.row || j!= this->address.column)){
+							GameLayer::getInstance()->removeFromArray(i, j);
+						}
+					}
+				}
+			}));
+			list.pushBack(DelayTime::create(0.5f));
+			list.pushBack(CallFunc::create([&](){//É¾³ý
+				GameLayer::getInstance()->removeFromArray(this->address.row, this->address.column);
+				GameLayer::getInstance()->startOrStopSchedule(true);
+			}));
 			break;
 		default:
 			this->feather();
@@ -391,13 +433,18 @@ void BallSprite::remove(bool isshake, SkillState skill){
 		if(this->isLast){
 			list.pushBack(DelayTime::create(speed));
 			list.pushBack(CallFunc::create([&](){
-				for (auto i=GAME_ROW-1; i>0; i--) {
+				for (auto i=GAME_ROW-2; i>=0; i--) {
 					for (auto j=0; j<7; j++) {
-						if(GameLayer::getInstance()->getBall(i-1, j)==nullptr){
-							auto k = 0;
+						if(GameLayer::getInstance()->getBall(i, j)==nullptr&&GameLayer::getInstance()->getBall(i+1, j)!=nullptr){
+							auto c = 1;
+							while (i-c>=0&&GameLayer::getInstance()->getBall(i-c, j)==nullptr)
+							{
+								c++;
+							}
+							auto k = 1;
 							while (i+k<9&&GameLayer::getInstance()->getBall(i+k, j)!=nullptr)
 							{
-								GameLayer::getInstance()->swithBall(i+k,j, i+k-1,j);
+								GameLayer::getInstance()->swithBall(i+k,j, i+k-c,j);
 								k++;
 							}
 						}

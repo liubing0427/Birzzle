@@ -114,6 +114,8 @@ public:
 
 	CC_SYNTHESIZE(StatusDelegate*, delegator, Delegator);
 
+	void startOrStopSchedule(bool isStart);
+
 private:
     
 	PhysicsWorld *world;
